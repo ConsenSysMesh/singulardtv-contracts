@@ -1,0 +1,3 @@
+# ethereum
+https://github.com/ethereum/serpent/tarball/develop
+-e git+https://github.com/ethereum/pyethereum.git@develop#egg=pyethereum
