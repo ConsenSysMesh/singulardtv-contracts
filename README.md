@@ -7,6 +7,8 @@ Use `vagrant up` then
 
 ### To deploy the contracts:
 `python deploy.py -f deploy.txt -add_dev_code true`
+or
+`python deploy.py -f token_deploy.txt -add_dev_code true -contract_dir token_contracts/`
 
 ### To generate the ABIs:
-`python generate_abi.py`
+`python generate_abi.py`s
