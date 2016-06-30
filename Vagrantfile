@@ -59,19 +59,28 @@ pip install --upgrade pip
 pip install -r /vagrant/requirements.txt
 SCRIPT
 
+$node_dependencies = <<SCRIPT
+    curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
+    apt-get install -y nodejs
+    npm install -g git+https://github.com/ethereumjs/testrpc
+    npm install -g mocha
+SCRIPT
+
 Vagrant.configure(2) do |config|
 
   config.vm.box = "ubuntu/trusty64"
   config.vm.provider "virtualbox" do |v|
-      v.memory = 4096
+      v.memory = 2048
   end
 
   config.ssh.forward_agent = true
+  config.vm.network :forwarded_port, host: 8545, guest: 8545
 
   config.vm.provision "shell", inline: $dependencies
   config.vm.provision "shell", inline: $ethereumcpp
   config.vm.provision "shell", inline: $fucking_locale
   config.vm.provision "shell", inline: $pyenv, privileged: false
   config.vm.provision "shell", inline: $requirements, privileged: false
+  config.vm.provision "shell", inline: $node_dependencies, privileged: true
 
 end
