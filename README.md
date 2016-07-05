@@ -11,4 +11,4 @@ or
 `python deploy.py -f token_deploy.txt -add_dev_code true -contract_dir token_contracts/`
 
 ### To generate the ABIs:
-`python generate_abi.py`s
+`python generate_abi.py`
