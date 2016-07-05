@@ -1,3 +1,0 @@
-# create contracts
-create	StandardToken.sol
-# create	OraclizeResolver.sol
