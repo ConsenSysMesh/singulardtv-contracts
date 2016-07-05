@@ -292,7 +292,7 @@ contract FundContract is AbstractTokenContract {
         tokenData.balances[0xe4f7d5083baeea7810b6d816581bb0ee7cd4b6f4] = 1056 * 10000;
         tokenData.balances[0xef08eb55d3482973c178b02bd4d5f2cea420325f] = 8 * 10000;
         tokenData.balances[0xfdecc9f2ee374cedc94f72ab4da2de896ce58c19] = 500 * 10000;
-        tokenData.balances[0x80ec09329f1eec74cc3733b5825fab4412ca5268] = 500 * 10000;
+        
         tokenData.totalSupply = 500000000; // 500M
         // Set start-date of crowdfunding
         startDate = block.timestamp;
