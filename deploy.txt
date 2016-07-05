@@ -1,4 +1,5 @@
 # create contracts
+create	TokenLibrary.sol
 create	MistWallet.sol
 create	Fund.sol
 # create	OraclizeResolver.sol
