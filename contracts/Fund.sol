@@ -21,11 +21,11 @@ contract FundContract is StandardToken {
      *  Constants
      */
     uint constant MAX_TOKEN_COUNT = 1000000000; // 1B
-    uint constant TOKEN_LOCKING_PERIOD = 63072000; // 2 years
-    uint constant CROWDFUNDING_PERIOD = 2592000; // 1 month
-    uint constant TOKEN_ISSUANCE_PERIOD = 604800; // 1 week, guard has to issue tokens within one week after crowdfunding ends.
-    uint constant ETH_VALUE_PER_SHARE = 10**15; // 0.001 ETH
-    uint constant ETH_TARGET = 10**18 * 100000; // 100.000 ETH
+    uint constant TOKEN_LOCKING_PERIOD = 2 years; // 2 years
+    uint constant CROWDFUNDING_PERIOD = 4 weeks; // 1 month
+    uint constant TOKEN_ISSUANCE_PERIOD = 1 weeks ; // 1 week, guard has to issue tokens within one week after crowdfunding ends.
+    uint constant ETH_VALUE_PER_SHARE = 1 finney; // 0.001 ETH
+    uint constant ETH_TARGET = 100000 ether; // 100.000 ETH
 
     /*
      *  Token meta data
