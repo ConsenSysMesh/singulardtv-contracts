@@ -1,17 +1,9 @@
-import "AbstractToken.sol";
-import "TokenLibrary.sol";
+import "StandardToken.sol";
 
 
 /// @title Fund contract - Implements crowdfunding and revenue distribution.
 /// @author Stefan George - <stefan.george@consensys.net>
-contract FundContract is AbstractTokenContract {
-
-    {{dev_code}}
-
-    /*
-     *  Libraries
-     */
-    TokenLibrary.Data tokenData;
+contract FundContract is StandardToken {
 
     /*
      *  Storage
@@ -111,7 +103,7 @@ contract FundContract is AbstractTokenContract {
 
     modifier capNotReached() {
         // Check that cap was not reached yet.
-        if (tokenData.totalSupply == MAX_TOKEN_COUNT) {
+        if (totalSupply == MAX_TOKEN_COUNT) {
             throw;
         }
         _
@@ -131,9 +123,9 @@ contract FundContract is AbstractTokenContract {
     /// @dev Allows user to fund the campaign if campaign is still going and cap not reached. Returns share count.
     function fund() crowdfundingGoing() capNotReached() minInvestment() returns (uint) {
         uint shareCount = msg.value / ETH_VALUE_PER_SHARE;
-        if (tokenData.totalSupply + shareCount > MAX_TOKEN_COUNT) {
+        if (totalSupply + shareCount > MAX_TOKEN_COUNT) {
             // User wants to buy more shares than available. Set shares to possible maximum.
-            shareCount = MAX_TOKEN_COUNT - tokenData.totalSupply;
+            shareCount = MAX_TOKEN_COUNT - totalSupply;
             // Send change back to user.
             if (!msg.sender.send(msg.value - shareCount * ETH_VALUE_PER_SHARE)) {
                 throw;
@@ -141,17 +133,17 @@ contract FundContract is AbstractTokenContract {
         }
         // Update fund's and user's balance and total supply of shares.
         fundBalance += shareCount * ETH_VALUE_PER_SHARE;
-        tokenData.balances[msg.sender] += shareCount;
-        tokenData.totalSupply += shareCount;
+        balances[msg.sender] += shareCount;
+        totalSupply += shareCount;
         return shareCount;
     }
 
     /// @dev Allows user to withdraw his funding if crowdfunding ended and target was not reached. Returns success.
     function withdrawFunding() crowdfundingEnded() targetNotReachedOrGuardAbsent() returns (bool) {
         // Update fund's and user's balance and total supply of shares.
-        uint value = tokenData.balances[msg.sender] * ETH_VALUE_PER_SHARE;
-        tokenData.totalSupply -= tokenData.balances[msg.sender];
-        tokenData.balances[msg.sender] = 0;
+        uint value = balances[msg.sender] * ETH_VALUE_PER_SHARE;
+        totalSupply -= balances[msg.sender];
+        balances[msg.sender] = 0;
         fundBalance -= value;
         // Send funds back to user.
         if (value > 0  && !msg.sender.send(value)) {
@@ -179,7 +171,7 @@ contract FundContract is AbstractTokenContract {
     /// @dev Withdraws revenue share for user. Returns revenue share.
     /// @param reinvestRevenue User can reinvest his revenue share. The workshop always reinvests its revenue share.
     function withdrawRevenue(bool reinvestRevenue) returns (uint) {
-        uint value = tokenData.balances[msg.sender] * (revenueTotal - revenueAtTimeOfWithdraw[msg.sender]) / MAX_TOKEN_COUNT;
+        uint value = balances[msg.sender] * (revenueTotal - revenueAtTimeOfWithdraw[msg.sender]) / MAX_TOKEN_COUNT;
         revenueAtTimeOfWithdraw[msg.sender] = revenueTotal;
         if (reinvestRevenue || msg.sender == workshop) { // toDo: Should the reinvestment of workshop's revenue be enforced?
             if (value > 0 && !workshop.send(value)) {
@@ -200,14 +192,11 @@ contract FundContract is AbstractTokenContract {
         return true;
     }
 
-    /*
-     * Implementation of standard token interface
-     */
     /// @dev Transfers sender's tokens to a given address. Returns success.
     /// @param to Address of token receiver.
     /// @param value Number of tokens to transfer.
     function transfer(address to, uint256 value) sharesFungible() afterTwoYears() returns (bool) {
-        return TokenLibrary.transfer(tokenData, to, value);
+        return super.transfer(to, value);
     }
 
     /// @dev Allows allowed third party to transfer tokens from one address to another. Returns success.
@@ -215,32 +204,7 @@ contract FundContract is AbstractTokenContract {
     /// @param to Address to where tokens are sent.
     /// @param value Number of tokens to transfer.
     function transferFrom(address from, address to, uint256 value) sharesFungible() afterTwoYears() returns (bool) {
-        return TokenLibrary.transferFrom(tokenData, from, to, value);
-    }
-
-    /// @dev Sets approved amount of tokens for spender. Returns success.
-    /// @param spender Address of allowed account.
-    /// @param value Number of approved tokens.
-    function approve(address spender, uint256 value) returns (bool) {
-        return TokenLibrary.approve(tokenData, spender, value);
-    }
-
-    /// @dev Returns number of tokens owned by given address.
-    /// @param owner Address of token owner.
-    function balanceOf(address owner) constant returns (uint256) {
-        return tokenData.balances[owner];
-    }
-
-    /// @dev Returns number of allowed tokens for given address.
-    /// @param owner Address of token owner.
-    /// @param spender Address of token spender.
-    function allowance(address owner, address spender) constant returns (uint256) {
-      return tokenData.allowed[owner][spender];
-    }
-
-    /// @dev Returns total supply of tokens.
-    function totalSupply() constant returns (uint256) {
-        return tokenData.totalSupply;
+        return super.transferFrom(from, to, value);
     }
 
     /// @dev Default function triggers fund function.
@@ -253,47 +217,47 @@ contract FundContract is AbstractTokenContract {
         // Set guard address
         guard = msg.sender;
         // Set initial share distribution
-        tokenData.balances[workshop] = 400070000; // ~400M
+        balances[workshop] = 400070000; // ~400M
         // Series A investors
-        tokenData.balances[0x0196b712a0459cbee711e7c1d34d2c85a9910379] = 500 * 10000;
-        tokenData.balances[0x0f94dc84ce0f5fa2a8cc8d27a6969e25b5a39273] = 20 * 10000;
-        tokenData.balances[0x122b7eb5f629d806c8adb0baa0560266abb3ec80] = 45 * 10000;
-        tokenData.balances[0x13870d30fcdb7d7ae875668f2a1219225295d57c] = 5 * 10000;
-        tokenData.balances[0x26640e826547bc700b8c7a9cc2c1c39a4ab3cbb3] = 90 * 10000;
-        tokenData.balances[0x26bbfc6b23bc36e84447f061c6804f3a8b1a3698] = 25 * 10000;
-        tokenData.balances[0x2d37383a45b5122a27efade69f7180eee4d965da] = 127 * 10000;
-        tokenData.balances[0x2e79b81121193d55c4934c0f32ad3d0474ca7b9c] = 420 * 10000;
-        tokenData.balances[0x3114844fc0e3de03963bbd1d983ba17ca89ad010] = 500 * 10000;
-        tokenData.balances[0x378e6582e4e3723f7076c7769eef6febf51258e1] = 68 * 10000;
-        tokenData.balances[0x3e18530a4ee49a0357ffc8e74c08bfdee3915482] = 249 * 10000;
-        tokenData.balances[0x43fed1208d25ca0ef5681a5c17180af50c19f826] = 10 * 10000;
-        tokenData.balances[0x4f183b18302c0ac5804b8c455018efc51af15a56] = 1 * 10000;
-        tokenData.balances[0x55a886834658ccb6f26c39d5fdf6d833df3a276a] = 10 * 10000;
-        tokenData.balances[0x5faa1624422db662c654ab35ce57bf3242888937] = 500 * 10000;
-        tokenData.balances[0x6407b662b306e2353b627488da952337a5a0bbaa] = 500 * 10000;
-        tokenData.balances[0x66c334fff8c8b8224b480d8da658ca3b032fe625] = 1000 * 10000;
-        tokenData.balances[0x6c24991c6a40cd5ad6fab78388651fb324b35458] = 25 * 10000;
-        tokenData.balances[0x781ba492f786b2be48c2884b733874639f50022c] = 50 * 10000;
-        tokenData.balances[0x79b48f6f1ac373648c509b74a2c04a3281066457] = 200 * 10000;
-        tokenData.balances[0x8280f94b16ea65890910a555b01e363a62f5cac1] = 1000 * 10000;
-        tokenData.balances[0x835898804ed30e20aa29f2fe35c9f225175b049f] = 10 * 10000;
-        tokenData.balances[0x889f06275193b982e0679f7f193b5bdad97b0e84] = 1000 * 10000;
-        tokenData.balances[0x93bf1d2b1c8304f61176e7a5a36a3efd658b1b33] = 5 * 10000;
-        tokenData.balances[0x93c56ea8848150389e0917de868b0a23c87cf7b1] = 279 * 10000;
-        tokenData.balances[0x9adc0215372e4ffd8c89621a6bd9cfddf230349f] = 55 * 10000;
-        tokenData.balances[0xae4dbd3dae66722315541d66fe9457b342ac76d9] = 50 * 10000;
-        tokenData.balances[0xb7049710014166c166af8ca0431c0964f182b09f] = 899 * 10000;
-        tokenData.balances[0xbae02fe006f115e45b372f2ddc053eedca2d6fff] = 180 * 10000;
-        tokenData.balances[0xcc835821f643e090d8157de05451b416cd1202c4] = 30 * 10000;
-        tokenData.balances[0xce75342b92a7d0b1a2c6e9835b6b85787e12e585] = 67 * 10000;
-        tokenData.balances[0xd2b388467d9d0c30bab0a68070c6f49c473583a0] = 99 * 10000;
-        tokenData.balances[0xdca0724ddde95bbace1b557cab4375d9a813da49] = 350 * 10000;
-        tokenData.balances[0xe3ef62165b60cac0fcbe9c2dc6a03aab4c5c8462] = 15 * 10000;
-        tokenData.balances[0xe4f7d5083baeea7810b6d816581bb0ee7cd4b6f4] = 1056 * 10000;
-        tokenData.balances[0xef08eb55d3482973c178b02bd4d5f2cea420325f] = 8 * 10000;
-        tokenData.balances[0xfdecc9f2ee374cedc94f72ab4da2de896ce58c19] = 500 * 10000;
+        balances[0x0196b712a0459cbee711e7c1d34d2c85a9910379] = 500 * 10000;
+        balances[0x0f94dc84ce0f5fa2a8cc8d27a6969e25b5a39273] = 20 * 10000;
+        balances[0x122b7eb5f629d806c8adb0baa0560266abb3ec80] = 45 * 10000;
+        balances[0x13870d30fcdb7d7ae875668f2a1219225295d57c] = 5 * 10000;
+        balances[0x26640e826547bc700b8c7a9cc2c1c39a4ab3cbb3] = 90 * 10000;
+        balances[0x26bbfc6b23bc36e84447f061c6804f3a8b1a3698] = 25 * 10000;
+        balances[0x2d37383a45b5122a27efade69f7180eee4d965da] = 127 * 10000;
+        balances[0x2e79b81121193d55c4934c0f32ad3d0474ca7b9c] = 420 * 10000;
+        balances[0x3114844fc0e3de03963bbd1d983ba17ca89ad010] = 500 * 10000;
+        balances[0x378e6582e4e3723f7076c7769eef6febf51258e1] = 68 * 10000;
+        balances[0x3e18530a4ee49a0357ffc8e74c08bfdee3915482] = 249 * 10000;
+        balances[0x43fed1208d25ca0ef5681a5c17180af50c19f826] = 10 * 10000;
+        balances[0x4f183b18302c0ac5804b8c455018efc51af15a56] = 1 * 10000;
+        balances[0x55a886834658ccb6f26c39d5fdf6d833df3a276a] = 10 * 10000;
+        balances[0x5faa1624422db662c654ab35ce57bf3242888937] = 500 * 10000;
+        balances[0x6407b662b306e2353b627488da952337a5a0bbaa] = 500 * 10000;
+        balances[0x66c334fff8c8b8224b480d8da658ca3b032fe625] = 1000 * 10000;
+        balances[0x6c24991c6a40cd5ad6fab78388651fb324b35458] = 25 * 10000;
+        balances[0x781ba492f786b2be48c2884b733874639f50022c] = 50 * 10000;
+        balances[0x79b48f6f1ac373648c509b74a2c04a3281066457] = 200 * 10000;
+        balances[0x8280f94b16ea65890910a555b01e363a62f5cac1] = 1000 * 10000;
+        balances[0x835898804ed30e20aa29f2fe35c9f225175b049f] = 10 * 10000;
+        balances[0x889f06275193b982e0679f7f193b5bdad97b0e84] = 1000 * 10000;
+        balances[0x93bf1d2b1c8304f61176e7a5a36a3efd658b1b33] = 5 * 10000;
+        balances[0x93c56ea8848150389e0917de868b0a23c87cf7b1] = 279 * 10000;
+        balances[0x9adc0215372e4ffd8c89621a6bd9cfddf230349f] = 55 * 10000;
+        balances[0xae4dbd3dae66722315541d66fe9457b342ac76d9] = 50 * 10000;
+        balances[0xb7049710014166c166af8ca0431c0964f182b09f] = 899 * 10000;
+        balances[0xbae02fe006f115e45b372f2ddc053eedca2d6fff] = 180 * 10000;
+        balances[0xcc835821f643e090d8157de05451b416cd1202c4] = 30 * 10000;
+        balances[0xce75342b92a7d0b1a2c6e9835b6b85787e12e585] = 67 * 10000;
+        balances[0xd2b388467d9d0c30bab0a68070c6f49c473583a0] = 99 * 10000;
+        balances[0xdca0724ddde95bbace1b557cab4375d9a813da49] = 350 * 10000;
+        balances[0xe3ef62165b60cac0fcbe9c2dc6a03aab4c5c8462] = 15 * 10000;
+        balances[0xe4f7d5083baeea7810b6d816581bb0ee7cd4b6f4] = 1056 * 10000;
+        balances[0xef08eb55d3482973c178b02bd4d5f2cea420325f] = 8 * 10000;
+        balances[0xfdecc9f2ee374cedc94f72ab4da2de896ce58c19] = 500 * 10000;
         
-        tokenData.totalSupply = 500000000; // 500M
+        totalSupply = 500000000; // 500M
         // Set start-date of crowdfunding
         startDate = block.timestamp;
     }

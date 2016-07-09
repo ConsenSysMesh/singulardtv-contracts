@@ -59,19 +59,12 @@ class TestContract(TestCase):
             language='solidity',
             constructor_parameters=constructor_parameters
         )
-        self.token_library_contract = self.s.abi_contract(
-            self.pp.process('TokenLibrary.sol', add_dev_code=True, contract_dir=contract_dir),
-            language='solidity'
-        )
         # Crowdfunding contract is create by GUARD
         self.fund_contract = self.s.abi_contract(
             self.pp.process('Fund.sol', add_dev_code=True, contract_dir=contract_dir, addresses={
                 'MistWallet': self.a2h(self.mist_wallet_contract)
             }),
-            language='solidity',
-            libraries={
-                'TokenLibrary': self.token_library_contract.address.encode('hex')
-            }, sender=keys[GUARD]
+            language='solidity', sender=keys[GUARD]
         )
 
     @staticmethod

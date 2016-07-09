@@ -47,18 +47,29 @@ class PreProcessor:
         imported_codes = [file_name]
         while len(re.findall(r'import "(\S*)";', code)):
             for file_name in re.findall(r'import "(\S*)";', code):
-                if file_name not in imported_codes:
+                if file_name not in imported_codes and (not file_name.startswith("Abstract") or file_name.startswith("Abstract") and file_name[8:] not in imported_codes):
                     imported_code = open(contract_dir + file_name).read()
                     imported_codes.append(file_name)
                 else:
                     imported_code = ""
-                code = code.replace('import "{}";'.format(file_name), imported_code)
+                code = code.replace('import "{}";'.format(file_name), imported_code, 1)
         return code
 
     @staticmethod
     def insert_addresses(code, replace_dict):
         for placeholder, address in replace_dict.iteritems():
             code = code.replace("{{%s}}" % placeholder, address)
+        return code
+
+    @staticmethod
+    def contract_names(code):
+        return [m.end() for m in re.finditer(r'^(contract|library) [^\{]*{', code, re.MULTILINE)]
+
+    def insert_dev_code(self, code):
+        added_code_len = 0
+        for pos in self.contract_names(code):
+            code = code[:pos + added_code_len] + self.dev_code + code[pos + added_code_len:]
+            added_code_len += len(self.dev_code)
         return code
 
     def process(self, file_name, add_dev_code=False, contract_dir="", addresses=None, replace_unknown_addresses=False):
@@ -68,7 +79,8 @@ class PreProcessor:
         # resolve macros
         code = self.resolve_macros(code)
         # insert admin code
-        code = code.replace("{{dev_code}}", self.dev_code if add_dev_code else "")
+        if add_dev_code:
+            code = self.insert_dev_code(code)
         if addresses:
             code = self.insert_addresses(code, addresses)
         if replace_unknown_addresses:
