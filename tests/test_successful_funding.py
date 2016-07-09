@@ -136,7 +136,7 @@ class TestContract(TestCase):
         self.assertEqual(self.fund_contract.revenueTotal(), revenue)
         # WS reinvests its revenue
         reinvest = False
-        withdraw_data = self.fund_contract.translator.encode("withdrawRevenue", [reinvest])
+        withdraw_data = self.fund_contract.translator.encode("withdrawRevenue", [self.mist_wallet_contract.address, reinvest])
         revenue_share = revenue * 400070000 / MAX_TOKEN_COUNT
         wallet_balance = self.s.block.get_balance(self.mist_wallet_contract.address)
         self.mist_wallet_contract.execute(self.fund_contract.address, 0, withdraw_data, value=0)
@@ -144,12 +144,12 @@ class TestContract(TestCase):
         self.assertEqual(self.s.block.get_balance(self.mist_wallet_contract.address), wallet_balance + revenue_share)
         # Backer 1 withdraws his funding for himself
         revenue_share = revenue * share_count_b1 / MAX_TOKEN_COUNT
-        self.assertEqual(self.fund_contract.withdrawRevenue(reinvest, sender=keys[BACKER_1]), revenue_share)
+        self.assertEqual(self.fund_contract.withdrawRevenue(accounts[BACKER_1], reinvest, sender=keys[BACKER_1]), revenue_share)
         # Backer 2 reinvests his revenue
         reinvest = True
         share_count_b2 = self.fund_contract.balanceOf(accounts[BACKER_2])
         revenue_share = revenue * share_count_b2 / MAX_TOKEN_COUNT
         wallet_balance = self.s.block.get_balance(self.mist_wallet_contract.address)
-        self.assertEqual(self.fund_contract.withdrawRevenue(reinvest, sender=keys[BACKER_2]), revenue_share)
+        self.assertEqual(self.fund_contract.withdrawRevenue(accounts[BACKER_2], reinvest, sender=keys[BACKER_2]), revenue_share)
         # The wallet's balance increased.
         self.assertEqual(self.s.block.get_balance(self.mist_wallet_contract.address), wallet_balance + revenue_share)

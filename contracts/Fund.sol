@@ -170,16 +170,16 @@ contract FundContract is StandardToken {
 
     /// @dev Withdraws revenue share for user. Returns revenue share.
     /// @param reinvestRevenue User can reinvest his revenue share. The workshop always reinvests its revenue share.
-    function withdrawRevenue(bool reinvestRevenue) returns (uint) {
-        uint value = balances[msg.sender] * (revenueTotal - revenueAtTimeOfWithdraw[msg.sender]) / MAX_TOKEN_COUNT;
-        revenueAtTimeOfWithdraw[msg.sender] = revenueTotal;
-        if (reinvestRevenue || msg.sender == workshop) { // toDo: Should the reinvestment of workshop's revenue be enforced?
+    function withdrawRevenue(address forAddress, bool reinvestRevenue) returns (uint) {
+        uint value = balances[forAddress] * (revenueTotal - revenueAtTimeOfWithdraw[forAddress]) / MAX_TOKEN_COUNT;
+        revenueAtTimeOfWithdraw[forAddress] = revenueTotal;
+        if (reinvestRevenue || forAddress == workshop) { // toDo: Should the reinvestment of workshop's revenue be enforced?
             if (value > 0 && !workshop.send(value)) {
                 throw;
             }
         }
         else {
-            if (value > 0 && !msg.sender.send(value)) {
+            if (value > 0 && !forAddress.send(value)) {
                 throw;
             }
         }
@@ -196,7 +196,13 @@ contract FundContract is StandardToken {
     /// @param to Address of token receiver.
     /// @param value Number of tokens to transfer.
     function transfer(address to, uint256 value) sharesFungible() afterTwoYears() returns (bool) {
-        return super.transfer(to, value);
+        // Both parties withdraw their revenue first
+        withdrawRevenue(msg.sender, false);
+        withdrawRevenue(to, false);
+        if (super.transfer(to, value)) {
+            return true;
+        }
+        return false;
     }
 
     /// @dev Allows allowed third party to transfer tokens from one address to another. Returns success.
@@ -204,7 +210,13 @@ contract FundContract is StandardToken {
     /// @param to Address to where tokens are sent.
     /// @param value Number of tokens to transfer.
     function transferFrom(address from, address to, uint256 value) sharesFungible() afterTwoYears() returns (bool) {
-        return super.transferFrom(from, to, value);
+        // Both parties withdraw their revenue first
+        withdrawRevenue(from, false);
+        withdrawRevenue(to, false);
+        if (super.transferFrom(from, to, value)) {
+            return true;
+        }
+        return false;
     }
 
     /// @dev Default function triggers fund function.
