@@ -221,6 +221,8 @@ contract FundContract is StandardToken {
 
     /// @dev Default function triggers fund function.
     function () {
+        // This fallback function needs more than 2,300 gas.
+        // Fallback function for funding is required to be compatible with WeiFund.
         fund();
     }
 
