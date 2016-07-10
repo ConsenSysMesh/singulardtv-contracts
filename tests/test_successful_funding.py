@@ -59,13 +59,29 @@ class TestContract(TestCase):
             language='solidity',
             constructor_parameters=constructor_parameters
         )
-        # Crowdfunding contract is create by GUARD
+        # Create contract
         self.fund_contract = self.s.abi_contract(
-            self.pp.process('Fund.sol', add_dev_code=True, contract_dir=contract_dir, addresses={
+            self.pp.process('SingularDTVFund.sol', add_dev_code=True, contract_dir=contract_dir, addresses={
                 'MistWallet': self.a2h(self.mist_wallet_contract)
             }),
-            language='solidity', sender=keys[GUARD]
+            language='solidity'
         )
+        # Crowdfunding contract is create by GUARD
+        self.crowdfunding_contract = self.s.abi_contract(
+            self.pp.process('SingularDTVCrowdfunding.sol', add_dev_code=True, contract_dir=contract_dir),
+            language='solidity',
+            sender=keys[GUARD]
+        )
+        self.token_contract = self.s.abi_contract(
+            self.pp.process('SingularDTVToken.sol', add_dev_code=True, contract_dir=contract_dir, addresses={
+                'SingularDTVFund': self.a2h(self.fund_contract),
+                'SingularDTVCrowdfunding': self.a2h(self.crowdfunding_contract)
+            }),
+            language='solidity'
+        )
+        # Setup contracts
+        self.assertTrue(self.fund_contract.setup(self.crowdfunding_contract.address, self.token_contract.address))
+        self.assertTrue(self.crowdfunding_contract.setup(self.fund_contract.address, self.token_contract.address))
 
     @staticmethod
     def a2h(contract):
@@ -73,67 +89,67 @@ class TestContract(TestCase):
 
     def test(self):
         # Crowdfunding has started and startDate has been set.
-        self.assertEqual(self.fund_contract.startDate(), self.s.block.timestamp)
+        self.assertEqual(self.crowdfunding_contract.startDate(), self.s.block.timestamp)
         # Series A investor with address 0x0196b712a0459cbee711e7c1d34d2c85a9910379 has 5M shares
-        self.assertEqual(self.fund_contract.balanceOf("0x0196b712a0459cbee711e7c1d34d2c85a9910379"), 5000000)
+        self.assertEqual(self.token_contract.balanceOf("0x0196b712a0459cbee711e7c1d34d2c85a9910379"), 5000000)
         # Half of the shares are already assigned to Workshop and series A investors.
-        self.assertEqual(self.fund_contract.totalSupply(), MAX_TOKEN_COUNT / 2)
+        self.assertEqual(self.token_contract.totalSupply(), MAX_TOKEN_COUNT / 2)
         # Backer 1 starts funding, but doesn't send enough money to buy a share, transaction fails.
         try:
-            self.fund_contract.fund(value=ETH_VALUE_PER_SHARE - 1, sender=keys[BACKER_1])
+            self.crowdfunding_contract.fund(value=ETH_VALUE_PER_SHARE - 1, sender=keys[BACKER_1])
         except TransactionFailed:
-            self.assertEqual(self.fund_contract.balanceOf(accounts[BACKER_1]), 0)
+            self.assertEqual(self.token_contract.balanceOf(accounts[BACKER_1]), 0)
         # Backer 1 increased his amount to buy some shares and sends them directly to the contract (default function)
         share_count_b1 = 1000
-        self.s.send(keys[BACKER_1], self.fund_contract.address, ETH_VALUE_PER_SHARE * share_count_b1)
+        self.s.send(keys[BACKER_1], self.crowdfunding_contract.address, ETH_VALUE_PER_SHARE * share_count_b1)
         # Backer 1 has now share_count shares
-        self.assertEqual(self.fund_contract.balanceOf(accounts[BACKER_1]), share_count_b1)
+        self.assertEqual(self.token_contract.balanceOf(accounts[BACKER_1]), share_count_b1)
         # Backer 1 cannot move his shares yet, because the Guard hasn't activated fungibility yet.
         try:
-            self.fund_contract.transfer(accounts[BACKER_2], share_count_b1, sender=keys[BACKER_1])
+            self.token_contract.transfer(accounts[BACKER_2], share_count_b1, sender=keys[BACKER_1])
         except TransactionFailed:
-            self.assertEqual(self.fund_contract.balanceOf(accounts[BACKER_1]), share_count_b1)
+            self.assertEqual(self.token_contract.balanceOf(accounts[BACKER_1]), share_count_b1)
         # Backer 2 invests too and wants to buy more shares than possible. He gets the maximum amount possible.
         share_count_b2 = MAX_TOKEN_COUNT / 2
-        self.assertEqual(self.fund_contract.fund(value=ETH_VALUE_PER_SHARE * share_count_b2, sender=keys[BACKER_2]),
+        self.assertEqual(self.crowdfunding_contract.fund(value=ETH_VALUE_PER_SHARE * share_count_b2, sender=keys[BACKER_2]),
                          share_count_b2 - share_count_b1)
         # Backer 1 wants to buy more shares too, but the cap has been reached already
-        self.assertEqual(self.fund_contract.totalSupply(), MAX_TOKEN_COUNT)
+        self.assertEqual(self.token_contract.totalSupply(), MAX_TOKEN_COUNT)
         try:
-            self.fund_contract.fund(value=ETH_VALUE_PER_SHARE, sender=keys[BACKER_1])
+            self.crowdfunding_contract.fund(value=ETH_VALUE_PER_SHARE, sender=keys[BACKER_1])
         except TransactionFailed:
-            self.assertEqual(self.fund_contract.balanceOf(accounts[BACKER_1]), share_count_b1)
+            self.assertEqual(self.token_contract.balanceOf(accounts[BACKER_1]), share_count_b1)
         # Crowdfunding period ends
         self.s.block.timestamp += CROWDFUNDING_PERIOD
         # Backer 1 wants to withdraw his shares now, but fails, because the campaign ended successfully
         try:
-            self.fund_contract.withdrawFunding(sender=keys[BACKER_1])
+            self.crowdfunding_contract.withdrawFunding(sender=keys[BACKER_1])
         except TransactionFailed:
-            self.assertEqual(self.fund_contract.balanceOf(accounts[BACKER_1]), share_count_b1)
+            self.assertEqual(self.token_contract.balanceOf(accounts[BACKER_1]), share_count_b1)
         # Workshop wants to withdraw its funding but it fails, because guard has not activated shares yet.
-        fund_balance = self.fund_contract.fundBalance()
+        fund_balance = self.crowdfunding_contract.fundBalance()
         try:
-            self.fund_contract.withdrawForWorkshop(sender=keys[WS_1])
+            self.crowdfunding_contract.withdrawForWorkshop(sender=keys[WS_1])
         except TransactionFailed:
-            self.assertEqual(self.fund_contract.fundBalance(), fund_balance)
+            self.assertEqual(self.crowdfunding_contract.fundBalance(), fund_balance)
         # A third party tries to make shares fungible, but fails. Only guard is allowed to do this operation.
         try:
-            self.fund_contract.issueTokens(sender=keys[WS_1])
+            self.crowdfunding_contract.makeTokensFungible(sender=keys[WS_1])
         except TransactionFailed:
             pass
-        self.assertFalse(self.fund_contract.sharesIssued())
+        self.assertFalse(self.crowdfunding_contract.tokensFungible())
         # Now the guard is doing the operation successfully.
-        self.assertTrue(self.fund_contract.issueTokens(sender=keys[GUARD]))
+        self.assertTrue(self.crowdfunding_contract.makeTokensFungible(sender=keys[GUARD]))
         # Workshop withdraws funding successfully.
-        self.assertTrue(self.fund_contract.withdrawForWorkshop(sender=keys[WS_1]))
+        self.assertTrue(self.crowdfunding_contract.withdrawForWorkshop(sender=keys[WS_1]))
         # The funding contract is empty now.
-        self.assertEqual(self.s.block.get_balance(self.fund_contract.address), 0)
+        self.assertEqual(self.s.block.get_balance(self.crowdfunding_contract.address), 0)
         # All funds have been transferred to the mist wallet.
         self.assertEqual(self.s.block.get_balance(self.mist_wallet_contract.address), fund_balance)
         # Workshop generated revenue and deposits revenue on the fund contract.
         revenue = 10**18 * 1000
         self.assertTrue(self.fund_contract.depositRevenue(value=revenue, sender=keys[WS_1]))
-        self.assertEqual(self.fund_contract.revenueTotal(), revenue)
+        self.assertEqual(self.fund_contract.totalRevenue(), revenue)
         # WS reinvests its revenue
         reinvest = False
         withdraw_data = self.fund_contract.translator.encode("withdrawRevenue", [self.mist_wallet_contract.address, reinvest])
@@ -147,7 +163,7 @@ class TestContract(TestCase):
         self.assertEqual(self.fund_contract.withdrawRevenue(accounts[BACKER_1], reinvest, sender=keys[BACKER_1]), revenue_share)
         # Backer 2 reinvests his revenue
         reinvest = True
-        share_count_b2 = self.fund_contract.balanceOf(accounts[BACKER_2])
+        share_count_b2 = self.token_contract.balanceOf(accounts[BACKER_2])
         revenue_share = revenue * share_count_b2 / MAX_TOKEN_COUNT
         wallet_balance = self.s.block.get_balance(self.mist_wallet_contract.address)
         self.assertEqual(self.fund_contract.withdrawRevenue(accounts[BACKER_2], reinvest, sender=keys[BACKER_2]), revenue_share)
