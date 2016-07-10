@@ -109,7 +109,7 @@ contract SingularDTVCrowdfunding {
      *  Contract functions
      */
     /// @dev Allows user to fund the campaign if campaign is still going and cap not reached. Returns share count.
-    function fund() crowdfundingGoing() capNotReached() minInvestment() returns (uint) {
+    function contributeMsgValue() crowdfundingGoing() capNotReached() minInvestment() returns (uint) {
         uint tokenCount = msg.value / ETH_VALUE_PER_SHARE;
         if (singularDTVToken.totalSupply() + tokenCount > MAX_TOKEN_COUNT) {
             // User wants to buy more shares than available. Set shares to possible maximum.
@@ -181,13 +181,6 @@ contract SingularDTVCrowdfunding {
             return true;
         }
         return false;
-    }
-
-    /// @dev Default function triggers fund function.
-    function () {
-        // This fallback function needs more than 2,300 gas.
-        // Fallback function for funding is required to be compatible with WeiFund.
-        fund();
     }
 
     /// @dev Contract constructor function sets guard and initial token balances.
