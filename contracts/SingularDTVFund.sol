@@ -15,6 +15,7 @@ contract SingularDTVFund {
     /*
      *  Storage
      */
+    address public owner;
     address public workshop = {{MistWallet}};
     uint public totalRevenue;
 
@@ -35,6 +36,14 @@ contract SingularDTVFund {
     modifier isWorkshop () {
         // Only workshop is allowed to proceed.
         if (msg.sender != workshop) {
+            throw;
+        }
+        _
+    }
+
+    modifier onlyOwner() {
+        // Only guard is allowed to do this action.
+        if (msg.sender != owner) {
             throw;
         }
         _
@@ -76,9 +85,18 @@ contract SingularDTVFund {
     /// @dev Setup function sets external contracts' addresses.
     /// @param singularDTVCrowdfundingAddress Crowdfunding address.
     /// @param singularDTVTokenAddress Token address.
-    function setup(address singularDTVCrowdfundingAddress, address singularDTVTokenAddress) returns (bool) {
-        singularDTVCrowdfunding = SingularDTVCrowdfunding(singularDTVCrowdfundingAddress);
-        singularDTVToken = SingularDTVToken(singularDTVTokenAddress);
-        return true;
+    function setup(address singularDTVCrowdfundingAddress, address singularDTVTokenAddress) onlyOwner() returns (bool) {
+        if (address(singularDTVCrowdfunding) == 0 || address(singularDTVToken) == 0) {
+            singularDTVCrowdfunding = SingularDTVCrowdfunding(singularDTVCrowdfundingAddress);
+            singularDTVToken = SingularDTVToken(singularDTVTokenAddress);
+            return true;
+        }
+        return false;
+    }
+
+    /// @dev Contract constructor function sets guard and initial token balances.
+    function SingularDTVFund() {
+        // Set owner address
+        owner = msg.sender;
     }
 }

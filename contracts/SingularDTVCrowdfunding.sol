@@ -41,7 +41,7 @@ contract SingularDTVCrowdfunding {
         _
     }
 
-    modifier onlyByGuard() {
+    modifier onlyGuard() {
         // Only guard is allowed to do this action.
         if (msg.sender != guard) {
             throw;
@@ -156,7 +156,7 @@ contract SingularDTVCrowdfunding {
     }
 
     /// @dev Only guard can trigger to make shares fungible. Returns success.
-    function makeTokensFungible() crowdfundingEnded() targetReached() withinTokenIssuancePeriod() onlyByGuard() returns (bool) {
+    function makeTokensFungible() crowdfundingEnded() targetReached() withinTokenIssuancePeriod() onlyGuard() returns (bool) {
         tokensFungible = true;
         return true;
     }
@@ -174,10 +174,13 @@ contract SingularDTVCrowdfunding {
     /// @dev Setup function sets external contracts' addresses.
     /// @param singularDTVFundAddress Crowdfunding address.
     /// @param singularDTVTokenAddress Token address.
-    function setup(address singularDTVFundAddress, address singularDTVTokenAddress) returns (bool) {
-        singularDTVFund = SingularDTVFund(singularDTVFundAddress);
-        singularDTVToken = SingularDTVToken(singularDTVTokenAddress);
-        return true;
+    function setup(address singularDTVFundAddress, address singularDTVTokenAddress) onlyGuard() returns (bool) {
+        if (address(singularDTVFund) == 0 || address(singularDTVToken) == 0) {
+            singularDTVFund = SingularDTVFund(singularDTVFundAddress);
+            singularDTVToken = SingularDTVToken(singularDTVTokenAddress);
+            return true;
+        }
+        return false;
     }
 
     /// @dev Default function triggers fund function.
