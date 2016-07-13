@@ -67,6 +67,7 @@ contract SingularDTVToken is StandardToken {
     /// @param singularDTVFundAddress New fund address.
     function changeFund(address singularDTVFundAddress) isFundContract() returns (bool) {
         singularDTVFund = SingularDTVFund(singularDTVFundAddress);
+        return true;
     }
 
     /// @dev Crowdfunding contract issues new tokens for address. Returns success.
