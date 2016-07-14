@@ -16,6 +16,7 @@ WS_2 = 2
 WS_3 = 3
 BACKER_1 = 4
 BACKER_2 = 5
+BACKER_3 = 6
 
 # Mist wallet
 REQUIRED_ACCOUNTS = 2
@@ -96,12 +97,20 @@ class TestContract(TestCase):
         self.assertEqual(self.token_contract.totalSupply(), MAX_TOKEN_COUNT / 2)
         # Backer 1 starts funding, but doesn't send enough money to buy a share, transaction fails.
         try:
-            self.crowdfunding_contract.fund(value=ETH_VALUE_PER_SHARE - 1, sender=keys[BACKER_1])
+            self.crowdfunding_contract.contributeMsgValue(value=ETH_VALUE_PER_SHARE - 1, sender=keys[BACKER_1])
         except TransactionFailed:
             self.assertEqual(self.token_contract.balanceOf(accounts[BACKER_1]), 0)
-        # Backer 1 increased his amount to buy some shares and sends them directly to the contract (default function)
+        # Backer 1 fails to buy some shares, because he sends Ether directly to the contract, which fails.
         share_count_b1 = 1000
-        self.s.send(keys[BACKER_1], self.crowdfunding_contract.address, ETH_VALUE_PER_SHARE * share_count_b1)
+        try:
+            self.s.send(keys[BACKER_1], self.crowdfunding_contract.address, ETH_VALUE_PER_SHARE * share_count_b1)
+        except TransactionFailed:
+            self.assertEqual(self.token_contract.balanceOf(accounts[BACKER_1]), 0)
+        # Backer 1 is now successfully buying some shares by using the contributeMsgValue function.
+        self.assertEqual(
+            self.crowdfunding_contract.contributeMsgValue(value=ETH_VALUE_PER_SHARE * share_count_b1, sender=keys[BACKER_1]),
+            share_count_b1
+        )
         # Backer 1 has now share_count shares
         self.assertEqual(self.token_contract.balanceOf(accounts[BACKER_1]), share_count_b1)
         # Backer 1 cannot move his shares yet, because the Guard hasn't activated fungibility yet.
@@ -111,12 +120,12 @@ class TestContract(TestCase):
             self.assertEqual(self.token_contract.balanceOf(accounts[BACKER_1]), share_count_b1)
         # Backer 2 invests too and wants to buy more shares than possible. He gets the maximum amount possible.
         share_count_b2 = MAX_TOKEN_COUNT / 2
-        self.assertEqual(self.crowdfunding_contract.fund(value=ETH_VALUE_PER_SHARE * share_count_b2, sender=keys[BACKER_2]),
+        self.assertEqual(self.crowdfunding_contract.contributeMsgValue(value=ETH_VALUE_PER_SHARE * share_count_b2, sender=keys[BACKER_2]),
                          share_count_b2 - share_count_b1)
         # Backer 1 wants to buy more shares too, but the cap has been reached already
         self.assertEqual(self.token_contract.totalSupply(), MAX_TOKEN_COUNT)
         try:
-            self.crowdfunding_contract.fund(value=ETH_VALUE_PER_SHARE, sender=keys[BACKER_1])
+            self.crowdfunding_contract.contributeMsgValue(value=ETH_VALUE_PER_SHARE, sender=keys[BACKER_1])
         except TransactionFailed:
             self.assertEqual(self.token_contract.balanceOf(accounts[BACKER_1]), share_count_b1)
         # Crowdfunding period ends
@@ -158,9 +167,14 @@ class TestContract(TestCase):
         self.mist_wallet_contract.execute(self.fund_contract.address, 0, withdraw_data, value=0)
         # The wallet's balance increased.
         self.assertEqual(self.s.block.get_balance(self.mist_wallet_contract.address), wallet_balance + revenue_share)
-        # Backer 1 withdraws his funding for himself
+        # Backer 1 withdraws his revenue for himself
         revenue_share = revenue * share_count_b1 / MAX_TOKEN_COUNT
         self.assertEqual(self.fund_contract.withdrawRevenue(accounts[BACKER_1], reinvest, sender=keys[BACKER_1]), revenue_share)
+        # Backer 1 transfer shares to new backer 3
+        self.assertTrue(self.token_contract.transfer(accounts[BACKER_3], share_count_b1, sender=keys[BACKER_1]))
+        # Backer 3 tries to withdraw his revenue share for his new shares.
+        # Backer 3 won't get anything, because no new revenue has been generated after transfer.
+        self.assertEqual(self.fund_contract.withdrawRevenue(accounts[BACKER_3], reinvest, sender=keys[BACKER_3]), 0)
         # Backer 2 reinvests his revenue
         reinvest = True
         share_count_b2 = self.token_contract.balanceOf(accounts[BACKER_2])

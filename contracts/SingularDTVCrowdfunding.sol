@@ -183,6 +183,11 @@ contract SingularDTVCrowdfunding {
         return false;
     }
 
+    /// @dev Fallback function always fails.
+    function () {
+        throw;
+    }
+
     /// @dev Contract constructor function sets guard and initial token balances.
     function SingularDTVCrowdfunding() {
         // Set guard address
