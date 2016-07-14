@@ -65,7 +65,7 @@ contract SingularDTVToken is StandardToken {
      */
     /// @dev Change fund. Returns success.
     /// @param singularDTVFundAddress New fund address.
-    function changeFund(address singularDTVFundAddress) isFundContract() returns (bool) {
+    function changeFund(address singularDTVFundAddress) isFundContract returns (bool) {
         singularDTVFund = SingularDTVFund(singularDTVFundAddress);
         return true;
     }
@@ -73,7 +73,7 @@ contract SingularDTVToken is StandardToken {
     /// @dev Crowdfunding contract issues new tokens for address. Returns success.
     /// @param _for Address of receiver.
     /// @param tokenCount Number of tokens to issue.
-    function issueTokens(address _for, uint tokenCount) isCrowdfundingOrFundContract() returns (bool) {
+    function issueTokens(address _for, uint tokenCount) isCrowdfundingOrFundContract returns (bool) {
         balances[_for] += tokenCount;
         totalSupply += tokenCount;
         return true;
@@ -82,7 +82,7 @@ contract SingularDTVToken is StandardToken {
     /// @dev Crowdfunding contract issues new tokens for address. Returns success.
     /// @param _for Address of receiver.
     /// @param tokenCount Number of tokens to issue.
-    function revokeTokens(address _for, uint tokenCount) isCrowdfundingOrFundContract() returns (bool) {
+    function revokeTokens(address _for, uint tokenCount) isCrowdfundingOrFundContract returns (bool) {
         if (tokenCount <= balances[_for]) {
             balances[_for] -= tokenCount;
             totalSupply -= tokenCount;
@@ -94,7 +94,11 @@ contract SingularDTVToken is StandardToken {
     /// @dev Transfers sender's tokens to a given address. Returns success.
     /// @param to Address of token receiver.
     /// @param value Number of tokens to transfer.
-    function transfer(address to, uint256 value) tokensAreFungible() twoYearsPassed() returns (bool) {
+    function transfer(address to, uint256 value)
+        tokensAreFungible
+        twoYearsPassed
+        returns (bool)
+    {
         // Both parties withdraw their revenue first
         singularDTVFund.withdrawRevenue(msg.sender, false);
         singularDTVFund.withdrawRevenue(to, false);
@@ -105,7 +109,11 @@ contract SingularDTVToken is StandardToken {
     /// @param from Address from where tokens are withdrawn.
     /// @param to Address to where tokens are sent.
     /// @param value Number of tokens to transfer.
-    function transferFrom(address from, address to, uint256 value) tokensAreFungible() twoYearsPassed() returns (bool) {
+    function transferFrom(address from, address to, uint256 value)
+        tokensAreFungible
+        twoYearsPassed
+        returns (bool)
+    {
         // Both parties withdraw their revenue first
         singularDTVFund.withdrawRevenue(from, false);
         singularDTVFund.withdrawRevenue(to, false);

@@ -53,7 +53,7 @@ contract SingularDTVFund {
      *  Contract functions
      */
     /// @dev Deposits revenue. Returns success.
-    function depositRevenue() tokensAreFungible() returns (bool) {
+    function depositRevenue() tokensAreFungible returns (bool) {
         totalRevenue += msg.value;
         return true;
     }
@@ -78,14 +78,14 @@ contract SingularDTVFund {
 
     /// @dev Change fund. Returns success.
     /// @param singularDTVFundAddress New fund address.
-    function changeFund(address singularDTVFundAddress) isWorkshop() returns (bool) { // toDo: What limitations should there be to upgrade?
+    function changeFund(address singularDTVFundAddress) isWorkshop returns (bool) { // toDo: What limitations should there be to upgrade?
         return singularDTVToken.changeFund(singularDTVFundAddress);
     }
 
     /// @dev Setup function sets external contracts' addresses.
     /// @param singularDTVCrowdfundingAddress Crowdfunding address.
     /// @param singularDTVTokenAddress Token address.
-    function setup(address singularDTVCrowdfundingAddress, address singularDTVTokenAddress) onlyOwner() returns (bool) {
+    function setup(address singularDTVCrowdfundingAddress, address singularDTVTokenAddress) onlyOwner returns (bool) {
         if (address(singularDTVCrowdfunding) == 0 || address(singularDTVToken) == 0) {
             singularDTVCrowdfunding = SingularDTVCrowdfunding(singularDTVCrowdfundingAddress);
             singularDTVToken = SingularDTVToken(singularDTVTokenAddress);

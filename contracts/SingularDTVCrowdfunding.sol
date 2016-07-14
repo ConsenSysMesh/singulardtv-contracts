@@ -109,7 +109,12 @@ contract SingularDTVCrowdfunding {
      *  Contract functions
      */
     /// @dev Allows user to fund the campaign if campaign is still going and cap not reached. Returns share count.
-    function contributeMsgValue() crowdfundingGoing() capNotReached() minInvestment() returns (uint) {
+    function contributeMsgValue()
+        crowdfundingGoing
+        capNotReached
+        minInvestment
+        returns (uint)
+    {
         uint tokenCount = msg.value / ETH_VALUE_PER_SHARE;
         if (singularDTVToken.totalSupply() + tokenCount > MAX_TOKEN_COUNT) {
             // User wants to buy more shares than available. Set shares to possible maximum.
@@ -129,7 +134,11 @@ contract SingularDTVCrowdfunding {
     }
 
     /// @dev Allows user to withdraw his funding if crowdfunding ended and target was not reached. Returns success.
-    function withdrawFunding() crowdfundingEnded() targetNotReachedOrGuardAbsent() returns (bool) {
+    function withdrawFunding()
+        crowdfundingEnded
+        targetNotReachedOrGuardAbsent
+        returns (bool)
+    {
         // Update fund's and user's balance and total supply of shares.
         uint tokenCount = singularDTVToken.balanceOf(msg.sender);
         uint value = tokenCount * ETH_VALUE_PER_SHARE;
@@ -146,7 +155,7 @@ contract SingularDTVCrowdfunding {
     }
 
     /// @dev Withdraws funding for workshop. Returns success.
-    function withdrawForWorkshop() tokensAreFungible() returns (bool) {
+    function withdrawForWorkshop() tokensAreFungible returns (bool) {
         uint value = fundBalance;
         fundBalance = 0;
         if (value > 0  && !singularDTVFund.workshop().send(value)) {
@@ -156,7 +165,13 @@ contract SingularDTVCrowdfunding {
     }
 
     /// @dev Only guard can trigger to make shares fungible. Returns success.
-    function makeTokensFungible() crowdfundingEnded() targetReached() withinTokenIssuancePeriod() onlyGuard() returns (bool) {
+    function makeTokensFungible()
+        crowdfundingEnded
+        targetReached
+        withinTokenIssuancePeriod
+        onlyGuard
+        returns (bool)
+    {
         tokensFungible = true;
         return true;
     }
@@ -174,7 +189,7 @@ contract SingularDTVCrowdfunding {
     /// @dev Setup function sets external contracts' addresses.
     /// @param singularDTVFundAddress Crowdfunding address.
     /// @param singularDTVTokenAddress Token address.
-    function setup(address singularDTVFundAddress, address singularDTVTokenAddress) onlyGuard() returns (bool) {
+    function setup(address singularDTVFundAddress, address singularDTVTokenAddress) onlyGuard returns (bool) {
         if (address(singularDTVFund) == 0 || address(singularDTVToken) == 0) {
             singularDTVFund = SingularDTVFund(singularDTVFundAddress);
             singularDTVToken = SingularDTVToken(singularDTVTokenAddress);
