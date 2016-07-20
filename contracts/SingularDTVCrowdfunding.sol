@@ -125,7 +125,7 @@ contract SingularDTVCrowdfunding {
         if (crowdfundingStage == CrowdfundingStages.Ended && tokenIssuanceStage == TokenIssuanceStages.NotStarted) {
             tokenIssuanceStage = TokenIssuanceStages.Going;
         }
-        else if (crowdfundingStage == CrowdfundingStages.Going && now - startDate > CROWDFUNDING_PERIOD + TOKEN_ISSUANCE_PERIOD) {
+        else if (tokenIssuanceStage == TokenIssuanceStages.Going && now - startDate > CROWDFUNDING_PERIOD + TOKEN_ISSUANCE_PERIOD) {
             tokenIssuanceStage = TokenIssuanceStages.Ended;
         }
         _
