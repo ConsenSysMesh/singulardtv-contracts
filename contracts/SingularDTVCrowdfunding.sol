@@ -152,17 +152,17 @@ contract SingularDTVCrowdfunding {
                 throw;
             }
         }
-        // Update funding stage
-        if (fundingStage == FundingStages.NotReached
-            && singularDTVToken.totalSupply() * ETH_VALUE_PER_SHARE >= ETH_TARGET)
-        {
-            fundingStage = FundingStages.Reached;
-        }
         // Update fund's and user's balance and total supply of shares.
         fundBalance += tokenCount * ETH_VALUE_PER_SHARE;
         if (!singularDTVToken.issueTokens(msg.sender, tokenCount)) {
             // Tokens could not be issued.
             throw;
+        }
+        // Update funding stage
+        if (fundingStage == FundingStages.NotReached
+            && singularDTVToken.totalSupply() * ETH_VALUE_PER_SHARE >= ETH_TARGET)
+        {
+            fundingStage = FundingStages.Reached;
         }
         return tokenCount;
     }
@@ -170,7 +170,6 @@ contract SingularDTVCrowdfunding {
     /// @dev Allows user to withdraw his funding if crowdfunding ended and target was not reached. Returns success.
     function withdrawFunding()
         timedTransitions
-        atCrowdfundingStage(CrowdfundingStages.Ended)
         targetNotReachedOrGuardAbsent
         returns (bool)
     {
