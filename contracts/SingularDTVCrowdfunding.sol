@@ -56,7 +56,9 @@ contract SingularDTVCrowdfunding {
     uint constant CROWDFUNDING_PERIOD = 4 weeks; // 1 month
     uint constant TOKEN_ISSUANCE_PERIOD = 1 weeks ; // 1 week, guard has to issue tokens within one week after crowdfunding ends.
     uint constant TOKEN_LOCKING_PERIOD = 2 years; // 2 years
-    uint constant ETH_VALUE_PER_SHARE = 1 finney; // 0.001 ETH, results in 500,000 funding cap.
+    uint constant ETH_VALUE_PER_SHARE = 1 finney; // 0.001 ETH
+    uint constant ETH_TARGET = 100000 ether; // 100.000 ETH
+
 
     /*
      *  Modifiers
@@ -138,7 +140,6 @@ contract SingularDTVCrowdfunding {
     function contributeMsgValue()
         timedTransitions
         atCrowdfundingStage(CrowdfundingStages.Going)
-        atFundingStage(FundingStages.NotReached)
         minInvestment
         returns (uint)
     {
@@ -150,7 +151,11 @@ contract SingularDTVCrowdfunding {
             if (!msg.sender.send(msg.value - tokenCount * ETH_VALUE_PER_SHARE)) {
                 throw;
             }
-            // Update funding stage
+        }
+        // Update funding stage
+        if (fundingStage == FundingStages.NotReached
+            && singularDTVToken.totalSupply() * ETH_VALUE_PER_SHARE >= ETH_TARGET)
+        {
             fundingStage = FundingStages.Reached;
         }
         // Update fund's and user's balance and total supply of shares.
