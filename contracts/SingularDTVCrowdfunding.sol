@@ -13,12 +13,41 @@ contract SingularDTVCrowdfunding {
     SingularDTVFund public singularDTVFund;
 
     /*
+     *  Enums
+     */
+    enum CrowdfundingStages {
+        Going,
+        Ended
+    }
+
+    enum FundingStages {
+        NotReached,
+        Reached
+    }
+
+    enum TokenStages {
+        NotFungible,
+        Fungible
+    }
+
+    enum TokenIssuanceStages {
+        NotStarted,
+        Going,
+        Ended
+    }
+
+    /*
      *  Storage
      */
     address public guard;
     uint public startDate;
-    bool public tokensFungible;
     uint public fundBalance;
+
+    // Initialize stages
+    CrowdfundingStages public crowdfundingStage = CrowdfundingStages.Going;
+    FundingStages public fundingStage = FundingStages.NotReached;
+    TokenStages public tokenStage = TokenStages.NotFungible;
+    TokenIssuanceStages public tokenIssuanceStage = TokenIssuanceStages.NotStarted;
 
     /*
      *  Constants
@@ -27,71 +56,27 @@ contract SingularDTVCrowdfunding {
     uint constant CROWDFUNDING_PERIOD = 4 weeks; // 1 month
     uint constant TOKEN_ISSUANCE_PERIOD = 1 weeks ; // 1 week, guard has to issue tokens within one week after crowdfunding ends.
     uint constant TOKEN_LOCKING_PERIOD = 2 years; // 2 years
-    uint constant ETH_VALUE_PER_SHARE = 1 finney; // 0.001 ETH
-    uint constant ETH_TARGET = 100000 ether; // 100.000 ETH
+    uint constant ETH_VALUE_PER_SHARE = 1 finney; // 0.001 ETH, results in 500,000 funding cap.
 
     /*
      *  Modifiers
      */
-    modifier tokensAreFungible() {
-        // Checks if the Guard already issued tokens.
-        if (!tokensFungible) {
+    modifier targetNotReachedOrGuardAbsent() {
+        // Either crowdfunding ended unsuccessfully or Guard did not issue tokens in time.
+        if (crowdfundingStage == CrowdfundingStages.Ended
+            && (fundingStage == FundingStages.NotReached
+                || tokenStage == TokenStages.NotFungible && tokenIssuanceStage == TokenIssuanceStages.Ended))
+        {
+            _
+        }
+        else {
             throw;
         }
-        _
     }
 
     modifier onlyGuard() {
         // Only guard is allowed to do this action.
         if (msg.sender != guard) {
-            throw;
-        }
-        _
-    }
-
-    modifier crowdfundingEnded() {
-        // Check crowdfunding period is over.
-        if (block.timestamp - startDate < CROWDFUNDING_PERIOD) {
-            throw;
-        }
-        _
-    }
-
-    modifier crowdfundingGoing() {
-        // Check crowdfunding is not over.
-        if (block.timestamp - startDate >= CROWDFUNDING_PERIOD) {
-            throw;
-        }
-        _
-    }
-
-    modifier targetReached() {
-        // Check target was reached.
-        if (fundBalance < ETH_TARGET) {
-            throw;
-        }
-        _
-    }
-
-    modifier targetNotReachedOrGuardAbsent() {
-        // Check target balance was not reached yet or guard did not issue tokens in time.
-        if (fundBalance >= ETH_TARGET && (tokensFungible || !tokensFungible && block.timestamp - startDate < CROWDFUNDING_PERIOD + TOKEN_ISSUANCE_PERIOD)) {
-            throw;
-        }
-        _
-    }
-
-    modifier withinTokenIssuancePeriod() {
-        // Check target balance was not reached yet or guard did not issue tokens in time.
-        if (block.timestamp - startDate > CROWDFUNDING_PERIOD + TOKEN_ISSUANCE_PERIOD) {
-            throw;
-        }
-        _
-    }
-
-    modifier capNotReached() {
-        // Check that cap was not reached yet.
-        if (singularDTVToken.totalSupply() == MAX_TOKEN_COUNT) {
             throw;
         }
         _
@@ -105,13 +90,55 @@ contract SingularDTVCrowdfunding {
         _
     }
 
+    modifier atCrowdfundingStage(CrowdfundingStages _crowdfundingStage) {
+        if (crowdfundingStage != _crowdfundingStage) {
+            throw;
+        }
+        _
+    }
+
+    modifier atFundingStage(FundingStages _fundingStage) {
+        if (fundingStage != _fundingStage) {
+            throw;
+        }
+        _
+    }
+
+    modifier atTokenStage(TokenStages _tokenStage) {
+        if (tokenStage != _tokenStage) {
+            throw;
+        }
+        _
+    }
+
+    modifier atTokenIssuanceStage(TokenIssuanceStages _tokenIssuanceStage) {
+        if (tokenIssuanceStage != _tokenIssuanceStage) {
+            throw;
+        }
+        _
+    }
+
+    modifier timedTransitions() {
+        if (crowdfundingStage == CrowdfundingStages.Going && now - startDate >= CROWDFUNDING_PERIOD) {
+            crowdfundingStage = CrowdfundingStages.Ended;
+        }
+        if (crowdfundingStage == CrowdfundingStages.Ended && tokenIssuanceStage == TokenIssuanceStages.NotStarted) {
+            tokenIssuanceStage = TokenIssuanceStages.Going;
+        }
+        else if (crowdfundingStage == CrowdfundingStages.Going && now - startDate > CROWDFUNDING_PERIOD + TOKEN_ISSUANCE_PERIOD) {
+            tokenIssuanceStage = TokenIssuanceStages.Ended;
+        }
+        _
+    }
+
     /*
      *  Contract functions
      */
     /// @dev Allows user to fund the campaign if campaign is still going and cap not reached. Returns share count.
     function contributeMsgValue()
-        crowdfundingGoing
-        capNotReached
+        timedTransitions
+        atCrowdfundingStage(CrowdfundingStages.Going)
+        atFundingStage(FundingStages.NotReached)
         minInvestment
         returns (uint)
     {
@@ -123,6 +150,8 @@ contract SingularDTVCrowdfunding {
             if (!msg.sender.send(msg.value - tokenCount * ETH_VALUE_PER_SHARE)) {
                 throw;
             }
+            // Update funding stage
+            fundingStage = FundingStages.Reached;
         }
         // Update fund's and user's balance and total supply of shares.
         fundBalance += tokenCount * ETH_VALUE_PER_SHARE;
@@ -135,7 +164,8 @@ contract SingularDTVCrowdfunding {
 
     /// @dev Allows user to withdraw his funding if crowdfunding ended and target was not reached. Returns success.
     function withdrawFunding()
-        crowdfundingEnded
+        timedTransitions
+        atCrowdfundingStage(CrowdfundingStages.Ended)
         targetNotReachedOrGuardAbsent
         returns (bool)
     {
@@ -155,7 +185,10 @@ contract SingularDTVCrowdfunding {
     }
 
     /// @dev Withdraws funding for workshop. Returns success.
-    function withdrawForWorkshop() tokensAreFungible returns (bool) {
+    function withdrawForWorkshop()
+        atTokenStage(TokenStages.Fungible)
+        returns (bool)
+    {
         uint value = fundBalance;
         fundBalance = 0;
         if (value > 0  && !singularDTVFund.workshop().send(value)) {
@@ -166,13 +199,15 @@ contract SingularDTVCrowdfunding {
 
     /// @dev Only guard can trigger to make shares fungible. Returns success.
     function makeTokensFungible()
-        crowdfundingEnded
-        targetReached
-        withinTokenIssuancePeriod
+        timedTransitions
+        atCrowdfundingStage(CrowdfundingStages.Ended)
+        atFundingStage(FundingStages.Reached)
+        atTokenIssuanceStage(TokenIssuanceStages.Going)
         onlyGuard
         returns (bool)
     {
-        tokensFungible = true;
+        // Update token stage
+        tokenStage = TokenStages.Fungible;
         return true;
     }
 
@@ -183,7 +218,11 @@ contract SingularDTVCrowdfunding {
 
     /// @dev Returns if 2 years passed since beginning of crowdfunding.
     function towYearsPassed() returns (bool) {
-        return block.timestamp - startDate >= TOKEN_LOCKING_PERIOD;
+        return now - startDate >= TOKEN_LOCKING_PERIOD;
+    }
+
+    function tokensFungible() returns (bool) {
+        return tokenStage == TokenStages.Fungible;
     }
 
     /// @dev Setup function sets external contracts' addresses.
@@ -198,16 +237,16 @@ contract SingularDTVCrowdfunding {
         return false;
     }
 
-    /// @dev Fallback function always fails. Use contributeMsgValue function to fund the contract with Ether.
-    function () {
-        throw;
-    }
-
     /// @dev Contract constructor function sets guard and initial token balances.
     function SingularDTVCrowdfunding() {
         // Set guard address
         guard = msg.sender;
         // Set start-date of crowdfunding
-        startDate = block.timestamp;
+        startDate = now;
+    }
+
+    /// @dev Fallback function always fails. Use contributeMsgValue function to fund the contract with Ether.
+    function () {
+        throw;
     }
 }
