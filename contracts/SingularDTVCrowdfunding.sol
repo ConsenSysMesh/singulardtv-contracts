@@ -198,7 +198,7 @@ contract SingularDTVCrowdfunding {
         return false;
     }
 
-    /// @dev Fallback function always fails.
+    /// @dev Fallback function always fails. Use contributeMsgValue function to fund the contract with Ether.
     function () {
         throw;
     }
