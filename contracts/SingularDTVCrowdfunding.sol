@@ -205,9 +205,8 @@ contract SingularDTVCrowdfunding {
     /// @dev Only guard can trigger to make shares fungible. Returns success.
     function makeTokensFungible()
         timedTransitions
-        atCrowdfundingStage(CrowdfundingStages.Ended)
-        atFundingStage(FundingStages.Reached)
         atTokenIssuanceStage(TokenIssuanceStages.Going)
+        atFundingStage(FundingStages.Reached)
         onlyGuard
         returns (bool)
     {
