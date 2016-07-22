@@ -21,11 +21,6 @@ contract SingularDTVToken is StandardToken {
     uint8 public decimals = 0;
 
     /*
-     *  Constants
-     */
-    uint constant TOKEN_LOCKING_PERIOD = 2 years; // 2 years
-
-    /*
      *  Modifiers
      */
     modifier twoYearsPassed() {

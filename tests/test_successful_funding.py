@@ -171,6 +171,8 @@ class TestContract(TestCase):
         # Backer 1 withdraws his revenue for himself
         revenue_share = revenue * share_count_b1 / (MAX_TOKEN_COUNT*2)
         self.assertEqual(self.fund_contract.withdrawRevenue(accounts[BACKER_1], reinvest, sender=keys[BACKER_1]), revenue_share)
+        # The next time backer 1 wants to withdraw his revenue share, he gets nothing as no new revenue was generated.
+        self.assertEqual(self.fund_contract.withdrawRevenue(accounts[BACKER_1], reinvest, sender=keys[BACKER_1]), 0)
         # Backer 1 transfer shares to new backer 3
         self.assertTrue(self.token_contract.transfer(accounts[BACKER_3], share_count_b1, sender=keys[BACKER_1]))
         # Backer 3 tries to withdraw his revenue share for his new shares.
