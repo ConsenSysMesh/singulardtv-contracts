@@ -100,7 +100,7 @@ contract SingularDTVCrowdfunding {
      *  Contract functions
      */
     /// @dev Allows user to fund the campaign if campaign is still going and cap not reached. Returns share count.
-    function contributeMsgValue()
+    function fund()
         timedTransitions
         atStageOR(Stages.CrowdfundingGoingAndGoalNotReached, Stages.CrowdfundingGoingAndGoalReached)
         minInvestment
@@ -205,7 +205,7 @@ contract SingularDTVCrowdfunding {
         startDate = now;
     }
 
-    /// @dev Fallback function always fails. Use contributeMsgValue function to fund the contract with Ether.
+    /// @dev Fallback function always fails. Use fund function to fund the contract with Ether.
     function () {
         throw;
     }
