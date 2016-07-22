@@ -97,7 +97,7 @@ class TestContract(TestCase):
         self.assertEqual(self.token_contract.totalSupply(), MAX_TOKEN_COUNT / 2)
         # Backer 1 starts funding, but doesn't send enough money to buy a share, transaction fails.
         try:
-            self.crowdfunding_contract.contributeMsgValue(value=ETH_VALUE_PER_SHARE - 1, sender=keys[BACKER_1])
+            self.crowdfunding_contract.fund(value=ETH_VALUE_PER_SHARE - 1, sender=keys[BACKER_1])
         except TransactionFailed:
             self.assertEqual(self.token_contract.balanceOf(accounts[BACKER_1]), 0)
         # Backer 1 fails to buy some shares, because he sends Ether directly to the contract, which fails.
@@ -106,9 +106,9 @@ class TestContract(TestCase):
             self.s.send(keys[BACKER_1], self.crowdfunding_contract.address, ETH_VALUE_PER_SHARE * share_count_b1)
         except TransactionFailed:
             self.assertEqual(self.token_contract.balanceOf(accounts[BACKER_1]), 0)
-        # Backer 1 is now successfully buying some shares by using the contributeMsgValue function.
+        # Backer 1 is now successfully buying some shares by using the fund function.
         self.assertEqual(
-            self.crowdfunding_contract.contributeMsgValue(value=ETH_VALUE_PER_SHARE * share_count_b1, sender=keys[BACKER_1]),
+            self.crowdfunding_contract.fund(value=ETH_VALUE_PER_SHARE * share_count_b1, sender=keys[BACKER_1]),
             share_count_b1
         )
         # Backer 1 has now share_count shares
@@ -120,12 +120,12 @@ class TestContract(TestCase):
             self.assertEqual(self.token_contract.balanceOf(accounts[BACKER_1]), share_count_b1)
         # Backer 2 invests too and wants to buy more shares than possible. He gets the maximum amount possible.
         share_count_b2 = MAX_TOKEN_COUNT / 2
-        self.assertEqual(self.crowdfunding_contract.contributeMsgValue(value=ETH_VALUE_PER_SHARE * share_count_b2, sender=keys[BACKER_2]),
+        self.assertEqual(self.crowdfunding_contract.fund(value=ETH_VALUE_PER_SHARE * share_count_b2, sender=keys[BACKER_2]),
                          share_count_b2 - share_count_b1)
         # Backer 1 wants to buy more shares too, but the cap has been reached already
         self.assertEqual(self.token_contract.totalSupply(), MAX_TOKEN_COUNT)
         try:
-            self.crowdfunding_contract.contributeMsgValue(value=ETH_VALUE_PER_SHARE, sender=keys[BACKER_1])
+            self.crowdfunding_contract.fund(value=ETH_VALUE_PER_SHARE, sender=keys[BACKER_1])
         except TransactionFailed:
             self.assertEqual(self.token_contract.balanceOf(accounts[BACKER_1]), share_count_b1)
         # Crowdfunding period ends

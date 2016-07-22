@@ -20,8 +20,8 @@ contract SingularDTVCrowdfunding {
         CrowdfundingEndedAndGoalNotReached,
         CrowdfundingGoingAndGoalReached,
         CrowdfundingEndedAndGoalReached,
-        TokenIssuancePeriodEndedAndTokensNotFungible,
-        TokenIssuancePeriodEndedAndTokensFungible
+        TokenFungiblePeriodEndedAndTokensNotFungible,
+        TokenFungiblePeriodEndedAndTokensFungible
     }
 
     /*
@@ -91,7 +91,7 @@ contract SingularDTVCrowdfunding {
         if (stage == Stages.CrowdfundingEndedAndGoalReached
             && now - startDate > CROWDFUNDING_PERIOD + TOKEN_ISSUANCE_PERIOD)
         {
-            stage = Stages.TokenIssuancePeriodEndedAndTokensNotFungible;
+            stage = Stages.TokenFungiblePeriodEndedAndTokensNotFungible;
         }
         _
     }
@@ -133,7 +133,7 @@ contract SingularDTVCrowdfunding {
     /// @dev Allows user to withdraw his funding if crowdfunding ended and target was not reached. Returns success.
     function withdrawFunding()
         timedTransitions
-        atStageOR(Stages.CrowdfundingEndedAndGoalNotReached, Stages.TokenIssuancePeriodEndedAndTokensNotFungible)
+        atStageOR(Stages.CrowdfundingEndedAndGoalNotReached, Stages.TokenFungiblePeriodEndedAndTokensNotFungible)
         returns (bool)
     {
         // Update fund's and user's balance and total supply of shares.
@@ -153,7 +153,7 @@ contract SingularDTVCrowdfunding {
 
     /// @dev Withdraws funding for workshop. Returns success.
     function withdrawForWorkshop()
-        atStage(Stages.TokenIssuancePeriodEndedAndTokensFungible)
+        atStage(Stages.TokenFungiblePeriodEndedAndTokensFungible)
         returns (bool)
     {
         uint value = fundBalance;
@@ -172,7 +172,7 @@ contract SingularDTVCrowdfunding {
         returns (bool)
     {
         // Update stage
-        stage = Stages.TokenIssuancePeriodEndedAndTokensFungible;
+        stage = Stages.TokenFungiblePeriodEndedAndTokensFungible;
         return true;
     }
 
@@ -182,7 +182,7 @@ contract SingularDTVCrowdfunding {
     }
 
     function tokensFungible() returns (bool) {
-        return stage == Stages.TokenIssuancePeriodEndedAndTokensFungible;
+        return stage == Stages.TokenFungiblePeriodEndedAndTokensFungible;
     }
 
     /// @dev Setup function sets external contracts' addresses.
