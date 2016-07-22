@@ -37,7 +37,7 @@ contract SingularDTVCrowdfunding {
     /*
      *  Constants
      */
-    uint constant MAX_TOKEN_COUNT = 1000000000; // 1B
+    uint constant MAX_TOKEN_COUNT = 500000000; // 0.5B tokens can be sold during sale
     uint constant CROWDFUNDING_PERIOD = 4 weeks; // 1 month
     uint constant TOKEN_ISSUANCE_PERIOD = 1 weeks ; // 1 week, guard has to issue tokens within one week after crowdfunding ends.
     uint constant TOKEN_LOCKING_PERIOD = 2 years; // 2 years
@@ -173,6 +173,8 @@ contract SingularDTVCrowdfunding {
     {
         // Update stage
         stage = Stages.TokenFungiblePeriodEndedAndTokensFungible;
+        // Set early investor tokens
+        singularDTVToken.assignEarlyInvestorsBalances();
         return true;
     }
 
