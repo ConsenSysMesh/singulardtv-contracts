@@ -146,7 +146,6 @@ class TestContract(TestCase):
             self.crowdfunding_contract.makeTokensFungible(sender=keys[WS_1])
         except TransactionFailed:
             pass
-        self.assertEqual(self.crowdfunding_contract.tokenStage(), 0)
         # Now the guard is doing the operation successfully.
         self.assertTrue(self.crowdfunding_contract.makeTokensFungible(sender=keys[GUARD]))
         # Workshop withdraws funding successfully.

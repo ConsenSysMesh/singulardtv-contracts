@@ -15,25 +15,13 @@ contract SingularDTVCrowdfunding {
     /*
      *  Enums
      */
-    enum CrowdfundingStages {
-        Going,
-        Ended
-    }
-
-    enum FundingStages {
-        NotReached,
-        Reached
-    }
-
-    enum TokenStages {
-        NotFungible,
-        Fungible
-    }
-
-    enum TokenIssuanceStages {
-        NotStarted,
-        Going,
-        Ended
+    enum Stages {
+        CrowdfundingGoingAndGoalNotReached,
+        CrowdfundingEndedAndGoalNotReached,
+        CrowdfundingGoingAndGoalReached,
+        CrowdfundingEndedAndGoalReached,
+        TokenIssuancePeriodEndedAndTokensNotFungible,
+        TokenIssuancePeriodEndedAndTokensFungible
     }
 
     /*
@@ -43,11 +31,8 @@ contract SingularDTVCrowdfunding {
     uint public startDate;
     uint public fundBalance;
 
-    // Initialize stages
-    CrowdfundingStages public crowdfundingStage = CrowdfundingStages.Going;
-    FundingStages public fundingStage = FundingStages.NotReached;
-    TokenStages public tokenStage = TokenStages.NotFungible;
-    TokenIssuanceStages public tokenIssuanceStage = TokenIssuanceStages.NotStarted;
+    // Initialize stage
+    Stages public stage = Stages.CrowdfundingGoingAndGoalNotReached;
 
     /*
      *  Constants
@@ -59,23 +44,9 @@ contract SingularDTVCrowdfunding {
     uint constant ETH_VALUE_PER_SHARE = 1 finney; // 0.001 ETH
     uint constant ETH_TARGET = 100000 ether; // 100.000 ETH
 
-
     /*
      *  Modifiers
      */
-    modifier targetNotReachedOrGuardAbsent() {
-        // Either crowdfunding ended unsuccessfully or Guard did not issue tokens in time.
-        if (crowdfundingStage == CrowdfundingStages.Ended
-            && (fundingStage == FundingStages.NotReached
-                || tokenStage == TokenStages.NotFungible && tokenIssuanceStage == TokenIssuanceStages.Ended))
-        {
-            _
-        }
-        else {
-            throw;
-        }
-    }
-
     modifier onlyGuard() {
         // Only guard is allowed to do this action.
         if (msg.sender != guard) {
@@ -92,43 +63,35 @@ contract SingularDTVCrowdfunding {
         _
     }
 
-    modifier atCrowdfundingStage(CrowdfundingStages _crowdfundingStage) {
-        if (crowdfundingStage != _crowdfundingStage) {
+    modifier atStage(Stages _stage) {
+        if (stage != _stage) {
             throw;
         }
         _
     }
 
-    modifier atFundingStage(FundingStages _fundingStage) {
-        if (fundingStage != _fundingStage) {
-            throw;
-        }
-        _
-    }
-
-    modifier atTokenStage(TokenStages _tokenStage) {
-        if (tokenStage != _tokenStage) {
-            throw;
-        }
-        _
-    }
-
-    modifier atTokenIssuanceStage(TokenIssuanceStages _tokenIssuanceStage) {
-        if (tokenIssuanceStage != _tokenIssuanceStage) {
+    modifier atStageOR(Stages _stage1, Stages _stage2) {
+        if (stage != _stage1 && stage != _stage2) {
             throw;
         }
         _
     }
 
     modifier timedTransitions() {
-        if (crowdfundingStage == CrowdfundingStages.Going && now - startDate >= CROWDFUNDING_PERIOD) {
-            crowdfundingStage = CrowdfundingStages.Ended;
+        if ((stage == Stages.CrowdfundingGoingAndGoalNotReached || stage == Stages.CrowdfundingGoingAndGoalReached)
+            && now - startDate >= CROWDFUNDING_PERIOD)
+        {
+            if (stage == Stages.CrowdfundingGoingAndGoalNotReached) {
+                stage = Stages.CrowdfundingEndedAndGoalNotReached;
+            }
+            else {
+                stage = Stages.CrowdfundingEndedAndGoalReached;
+            }
         }
-        if (crowdfundingStage == CrowdfundingStages.Ended && tokenIssuanceStage == TokenIssuanceStages.NotStarted) {
-            tokenIssuanceStage = TokenIssuanceStages.Going;
-        }
-        else if (tokenIssuanceStage == TokenIssuanceStages.Going && now - startDate > CROWDFUNDING_PERIOD + TOKEN_ISSUANCE_PERIOD) {
-            tokenIssuanceStage = TokenIssuanceStages.Ended;
+        if (stage == Stages.CrowdfundingEndedAndGoalReached
+            && now - startDate > CROWDFUNDING_PERIOD + TOKEN_ISSUANCE_PERIOD)
+        {
+            stage = Stages.TokenIssuancePeriodEndedAndTokensNotFungible;
         }
         _
     }
@@ -139,7 +102,7 @@ contract SingularDTVCrowdfunding {
     /// @dev Allows user to fund the campaign if campaign is still going and cap not reached. Returns share count.
     function contributeMsgValue()
         timedTransitions
-        atCrowdfundingStage(CrowdfundingStages.Going)
+        atStageOR(Stages.CrowdfundingGoingAndGoalNotReached, Stages.CrowdfundingGoingAndGoalReached)
         minInvestment
         returns (uint)
     {
@@ -158,11 +121,11 @@ contract SingularDTVCrowdfunding {
             // Tokens could not be issued.
             throw;
         }
-        // Update funding stage
-        if (fundingStage == FundingStages.NotReached
+        // Update stage
+        if (stage == Stages.CrowdfundingGoingAndGoalNotReached
             && singularDTVToken.totalSupply() * ETH_VALUE_PER_SHARE >= ETH_TARGET)
         {
-            fundingStage = FundingStages.Reached;
+            stage = Stages.CrowdfundingGoingAndGoalReached;
         }
         return tokenCount;
     }
@@ -170,7 +133,7 @@ contract SingularDTVCrowdfunding {
     /// @dev Allows user to withdraw his funding if crowdfunding ended and target was not reached. Returns success.
     function withdrawFunding()
         timedTransitions
-        targetNotReachedOrGuardAbsent
+        atStageOR(Stages.CrowdfundingEndedAndGoalNotReached, Stages.TokenIssuancePeriodEndedAndTokensNotFungible)
         returns (bool)
     {
         // Update fund's and user's balance and total supply of shares.
@@ -190,7 +153,7 @@ contract SingularDTVCrowdfunding {
 
     /// @dev Withdraws funding for workshop. Returns success.
     function withdrawForWorkshop()
-        atTokenStage(TokenStages.Fungible)
+        atStage(Stages.TokenIssuancePeriodEndedAndTokensFungible)
         returns (bool)
     {
         uint value = fundBalance;
@@ -204,13 +167,12 @@ contract SingularDTVCrowdfunding {
     /// @dev Only guard can trigger to make shares fungible. Returns success.
     function makeTokensFungible()
         timedTransitions
-        atTokenIssuanceStage(TokenIssuanceStages.Going)
-        atFundingStage(FundingStages.Reached)
+        atStage(Stages.CrowdfundingEndedAndGoalReached)
         onlyGuard
         returns (bool)
     {
-        // Update token stage
-        tokenStage = TokenStages.Fungible;
+        // Update stage
+        stage = Stages.TokenIssuancePeriodEndedAndTokensFungible;
         return true;
     }
 
@@ -225,7 +187,7 @@ contract SingularDTVCrowdfunding {
     }
 
     function tokensFungible() returns (bool) {
-        return tokenStage == TokenStages.Fungible;
+        return stage == Stages.TokenIssuancePeriodEndedAndTokensFungible;
     }
 
     /// @dev Setup function sets external contracts' addresses.
