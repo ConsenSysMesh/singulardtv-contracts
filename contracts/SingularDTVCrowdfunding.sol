@@ -176,11 +176,6 @@ contract SingularDTVCrowdfunding {
         return true;
     }
 
-    /// @dev Returns max token count for campaign.
-    function getMaxTokenCount() returns (uint) {
-        return MAX_TOKEN_COUNT;
-    }
-
     /// @dev Returns if 2 years passed since beginning of crowdfunding.
     function towYearsPassed() returns (bool) {
         return now - startDate >= TOKEN_LOCKING_PERIOD;

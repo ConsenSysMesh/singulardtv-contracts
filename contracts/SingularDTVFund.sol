@@ -61,7 +61,7 @@ contract SingularDTVFund {
     /// @dev Withdraws revenue share for user. Returns revenue share.
     /// @param reinvestRevenue User can reinvest his revenue share. The workshop always reinvests its revenue share.
     function withdrawRevenue(address forAddress, bool reinvestRevenue) returns (uint) {
-        uint value = singularDTVToken.balanceOf(forAddress) * (totalRevenue - revenueAtTimeOfWithdraw[forAddress]) / singularDTVCrowdfunding.getMaxTokenCount();
+        uint value = singularDTVToken.balanceOf(forAddress) * (totalRevenue - revenueAtTimeOfWithdraw[forAddress]) / singularDTVToken.totalSupply();
         revenueAtTimeOfWithdraw[forAddress] = totalRevenue;
         if (reinvestRevenue || forAddress == workshop) { // toDo: Should the reinvestment of workshop's revenue be enforced?
             if (value > 0 && !workshop.send(value)) {
