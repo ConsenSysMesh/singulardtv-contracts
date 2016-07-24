@@ -1,4 +1,4 @@
 contract SingularDTVCrowdfunding {
     function tokensFungible() returns (bool);
-    function twoYearsPassed() returns (bool);
+    function workshopWaited2Years() returns (bool);
 }

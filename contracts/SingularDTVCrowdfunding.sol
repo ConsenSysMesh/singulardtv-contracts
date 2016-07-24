@@ -179,7 +179,7 @@ contract SingularDTVCrowdfunding {
     }
 
     /// @dev Returns if 2 years passed since beginning of crowdfunding.
-    function twoYearsPassed() returns (bool) {
+    function workshopWaited2Years() returns (bool) {
         return now - startDate >= TOKEN_LOCKING_PERIOD;
     }
 
