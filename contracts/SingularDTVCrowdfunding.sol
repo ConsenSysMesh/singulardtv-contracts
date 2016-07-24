@@ -178,11 +178,6 @@ contract SingularDTVCrowdfunding {
         return true;
     }
 
-    /// @dev Returns if 2 years passed since beginning of crowdfunding.
-    function towYearsPassed() returns (bool) {
-        return now - startDate >= TOKEN_LOCKING_PERIOD;
-    }
-
     function tokensFungible() returns (bool) {
         return stage == Stages.TokenFungiblePeriodEndedAndTokensFungible;
     }
