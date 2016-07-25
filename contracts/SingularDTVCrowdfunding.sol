@@ -107,16 +107,18 @@ contract SingularDTVCrowdfunding {
         returns (uint)
     {
         uint tokenCount = msg.value / ETH_VALUE_PER_SHARE;
+        uint investment = msg.value; // Ether invested by backer.
         if (singularDTVToken.totalSupply() + tokenCount > MAX_TOKEN_COUNT) {
             // User wants to buy more shares than available. Set shares to possible maximum.
             tokenCount = MAX_TOKEN_COUNT - singularDTVToken.totalSupply();
+            investment = tokenCount * ETH_VALUE_PER_SHARE;
             // Send change back to user.
-            if (!msg.sender.send(msg.value - tokenCount * ETH_VALUE_PER_SHARE)) {
+            if (!msg.sender.send(msg.value - investment)) {
                 throw;
             }
         }
         // Update fund's and user's balance and total supply of shares.
-        fundBalance += tokenCount * ETH_VALUE_PER_SHARE;
+        fundBalance += investment;
         if (!singularDTVToken.issueTokens(msg.sender, tokenCount)) {
             // Tokens could not be issued.
             throw;
