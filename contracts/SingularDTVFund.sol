@@ -16,7 +16,7 @@ contract SingularDTVFund {
      *  Storage
      */
     address public owner;
-    address public workshop = {{MistWallet}};
+    address constant public workshop = {{MistWallet}};
     uint public totalRevenue;
 
     // User's address => Revenue at time of withdraw
