@@ -1,5 +1,4 @@
 import "AbstractSingularDTVToken.sol";
-import "AbstractSingularDTVCrowdfunding.sol";
 
 
 /// @title Fund contract - Implements revenue distribution.
@@ -9,7 +8,6 @@ contract SingularDTVFund {
     /*
      *  External contracts
      */
-    SingularDTVCrowdfunding public singularDTVCrowdfunding;
     SingularDTVToken public singularDTVToken;
 
     /*
@@ -25,22 +23,6 @@ contract SingularDTVFund {
     /*
      *  Modifiers
      */
-    modifier tokensAreFungible() {
-        // Checks if the Guard already issued tokens.
-        if (!singularDTVCrowdfunding.tokensFungible()) {
-            throw;
-        }
-        _
-    }
-
-    modifier isWorkshop () {
-        // Only workshop is allowed to proceed.
-        if (msg.sender != workshop) {
-            throw;
-        }
-        _
-    }
-
     modifier onlyOwner() {
         // Only guard is allowed to do this action.
         if (msg.sender != owner) {
@@ -53,7 +35,7 @@ contract SingularDTVFund {
      *  Contract functions
      */
     /// @dev Deposits revenue. Returns success.
-    function depositRevenue() tokensAreFungible returns (bool) {
+    function depositRevenue() returns (bool) {
         totalRevenue += msg.value;
         return true;
     }
@@ -63,7 +45,7 @@ contract SingularDTVFund {
     function withdrawRevenue(address forAddress, bool reinvestToWorkshop) returns (uint) {
         uint value = singularDTVToken.balanceOf(forAddress) * (totalRevenue - revenueAtTimeOfWithdraw[forAddress]) / singularDTVToken.totalSupply();
         revenueAtTimeOfWithdraw[forAddress] = totalRevenue;
-        if (reinvestToWorkshop || forAddress == workshop) { // toDo: Should the reinvestment of workshop's revenue be enforced?
+        if (reinvestToWorkshop || forAddress == workshop) {
             if (value > 0 && !workshop.send(value)) {
                 throw;
             }
@@ -76,18 +58,10 @@ contract SingularDTVFund {
         return value;
     }
 
-    /// @dev Change fund. Returns success.
-    /// @param singularDTVFundAddress New fund address.
-    function changeFund(address singularDTVFundAddress) isWorkshop returns (bool) { // toDo: What limitations should there be to upgrade?
-        return singularDTVToken.changeFund(singularDTVFundAddress);
-    }
-
     /// @dev Setup function sets external contracts' addresses.
-    /// @param singularDTVCrowdfundingAddress Crowdfunding address.
     /// @param singularDTVTokenAddress Token address.
-    function setup(address singularDTVCrowdfundingAddress, address singularDTVTokenAddress) onlyOwner returns (bool) {
-        if (address(singularDTVCrowdfunding) == 0 || address(singularDTVToken) == 0) {
-            singularDTVCrowdfunding = SingularDTVCrowdfunding(singularDTVCrowdfundingAddress);
+    function setup(address singularDTVTokenAddress) onlyOwner returns (bool) {
+        if (address(singularDTVToken) == 0) {
             singularDTVToken = SingularDTVToken(singularDTVTokenAddress);
             return true;
         }

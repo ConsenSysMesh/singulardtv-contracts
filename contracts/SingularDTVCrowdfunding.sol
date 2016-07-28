@@ -19,9 +19,7 @@ contract SingularDTVCrowdfunding {
         CrowdfundingGoingAndGoalNotReached,
         CrowdfundingEndedAndGoalNotReached,
         CrowdfundingGoingAndGoalReached,
-        CrowdfundingEndedAndGoalReached,
-        TokenFungiblePeriodEndedAndTokensNotFungible,
-        TokenFungiblePeriodEndedAndTokensFungible
+        CrowdfundingEndedAndGoalReached
     }
 
     /*
@@ -30,6 +28,10 @@ contract SingularDTVCrowdfunding {
     address public guard;
     uint public startDate;
     uint public fundBalance;
+    uint public ethValuePerShare = 1250 szabo; // 0.00125 ETH
+
+    // investor address => investment in Wei
+    mapping (address => uint) investments;
 
     // Initialize stage
     Stages public stage = Stages.CrowdfundingGoingAndGoalNotReached;
@@ -37,12 +39,10 @@ contract SingularDTVCrowdfunding {
     /*
      *  Constants
      */
-    uint constant MAX_TOKEN_COUNT = 500000000; // 0.5B tokens can be sold during sale
+    uint constant CAP = 500000000; // 0.5B tokens can be sold during sale
     uint constant CROWDFUNDING_PERIOD = 4 weeks; // 1 month
-    uint constant TOKEN_ISSUANCE_PERIOD = 1 weeks ; // 1 week, guard has to issue tokens within one week after crowdfunding ends.
     uint constant TOKEN_LOCKING_PERIOD = 2 years; // 2 years
-    uint constant ETH_VALUE_PER_SHARE = 1 finney; // 0.001 ETH
-    uint constant ETH_TARGET = 100000 ether; // 100.000 ETH
+    uint constant TOKEN_TARGET = 34000000; // 34M Tokens == 42,500 ETH
 
     /*
      *  Modifiers
@@ -57,7 +57,7 @@ contract SingularDTVCrowdfunding {
 
     modifier minInvestment() {
         // User has to invest at least the ether value of one share.
-        if (msg.value < ETH_VALUE_PER_SHARE) {
+        if (msg.value < ethValuePerShare) {
             throw;
         }
         _
@@ -86,12 +86,8 @@ contract SingularDTVCrowdfunding {
             }
             else {
                 stage = Stages.CrowdfundingEndedAndGoalReached;
+                singularDTVToken.assignEarlyInvestorsBalances();
             }
-        }
-        if (stage == Stages.CrowdfundingEndedAndGoalReached
-            && now - startDate > CROWDFUNDING_PERIOD + TOKEN_ISSUANCE_PERIOD)
-        {
-            stage = Stages.TokenFungiblePeriodEndedAndTokensNotFungible;
         }
         _
     }
@@ -106,12 +102,12 @@ contract SingularDTVCrowdfunding {
         minInvestment
         returns (uint)
     {
-        uint tokenCount = msg.value / ETH_VALUE_PER_SHARE;
+        uint tokenCount = msg.value / ethValuePerShare;
         uint investment = msg.value; // Ether invested by backer.
-        if (singularDTVToken.totalSupply() + tokenCount > MAX_TOKEN_COUNT) {
+        if (singularDTVToken.totalSupply() + tokenCount > CAP) {
             // User wants to buy more shares than available. Set shares to possible maximum.
-            tokenCount = MAX_TOKEN_COUNT - singularDTVToken.totalSupply();
-            investment = tokenCount * ETH_VALUE_PER_SHARE;
+            tokenCount = CAP - singularDTVToken.totalSupply();
+            investment = tokenCount * ethValuePerShare;
             // Send change back to user.
             if (!msg.sender.send(msg.value - investment)) {
                 throw;
@@ -119,15 +115,20 @@ contract SingularDTVCrowdfunding {
         }
         // Update fund's and user's balance and total supply of shares.
         fundBalance += investment;
+        investments[msg.sender] += investment;
         if (!singularDTVToken.issueTokens(msg.sender, tokenCount)) {
             // Tokens could not be issued.
             throw;
         }
         // Update stage
-        if (stage == Stages.CrowdfundingGoingAndGoalNotReached
-            && singularDTVToken.totalSupply() * ETH_VALUE_PER_SHARE >= ETH_TARGET)
-        {
-            stage = Stages.CrowdfundingGoingAndGoalReached;
+        if (stage == Stages.CrowdfundingGoingAndGoalNotReached) {
+            if (singularDTVToken.totalSupply() == CAP) {
+                stage = Stages.CrowdfundingEndedAndGoalReached;
+                singularDTVToken.assignEarlyInvestorsBalances();
+            }
+            else if (singularDTVToken.totalSupply() >= TOKEN_TARGET) {
+                stage = Stages.CrowdfundingGoingAndGoalReached;
+            }
         }
         return tokenCount;
     }
@@ -135,19 +136,20 @@ contract SingularDTVCrowdfunding {
     /// @dev Allows user to withdraw his funding if crowdfunding ended and target was not reached. Returns success.
     function withdrawFunding()
         timedTransitions
-        atStageOR(Stages.CrowdfundingEndedAndGoalNotReached, Stages.TokenFungiblePeriodEndedAndTokensNotFungible)
+        atStage(Stages.CrowdfundingEndedAndGoalNotReached)
         returns (bool)
     {
         // Update fund's and user's balance and total supply of shares.
+        uint investment = investments[msg.sender];
+        investments[msg.sender] = 0;
+        fundBalance -= investment;
         uint tokenCount = singularDTVToken.balanceOf(msg.sender);
-        uint value = tokenCount * ETH_VALUE_PER_SHARE;
-        fundBalance -= value;
         if (!singularDTVToken.revokeTokens(msg.sender, tokenCount)) {
             // Tokens could not be revoked.
             throw;
         }
         // Send funds back to user.
-        if (value > 0  && !msg.sender.send(value)) {
+        if (investment > 0  && !msg.sender.send(investment)) {
             throw;
         }
         return true;
@@ -155,7 +157,7 @@ contract SingularDTVCrowdfunding {
 
     /// @dev Withdraws funding for workshop. Returns success.
     function withdrawForWorkshop()
-        atStage(Stages.TokenFungiblePeriodEndedAndTokensFungible)
+        atStage(Stages.CrowdfundingEndedAndGoalReached)
         returns (bool)
     {
         uint value = fundBalance;
@@ -166,27 +168,15 @@ contract SingularDTVCrowdfunding {
         return true;
     }
 
-    /// @dev Only guard can trigger to make shares fungible. Returns success.
-    function makeTokensFungible()
-        timedTransitions
-        atStage(Stages.CrowdfundingEndedAndGoalReached)
-        onlyGuard
-        returns (bool)
-    {
-        // Update stage
-        stage = Stages.TokenFungiblePeriodEndedAndTokensFungible;
-        // Set early investor tokens
-        singularDTVToken.assignEarlyInvestorsBalances();
-        return true;
-    }
-
     /// @dev Returns if 2 years passed since beginning of crowdfunding.
     function workshopWaited2Years() returns (bool) {
         return now - startDate >= TOKEN_LOCKING_PERIOD;
     }
 
-    function tokensFungible() returns (bool) {
-        return stage == Stages.TokenFungiblePeriodEndedAndTokensFungible;
+    /// @dev Sets token value in Wei.
+    /// @param valueInWei New value.
+    function changeTokenValue(uint valueInWei) onlyGuard {
+        ethValuePerShare = valueInWei;
     }
 
     /// @dev Setup function sets external contracts' addresses.

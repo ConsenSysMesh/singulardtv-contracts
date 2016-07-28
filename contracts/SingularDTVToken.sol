@@ -10,14 +10,14 @@ contract SingularDTVToken is StandardToken {
     /*
      *  External contracts
      */
-    SingularDTVFund singularDTVFund = SingularDTVFund({{SingularDTVFund}});
-    SingularDTVCrowdfunding singularDTVCrowdfunding = SingularDTVCrowdfunding({{SingularDTVCrowdfunding}});
+    SingularDTVFund constant singularDTVFund = SingularDTVFund({{SingularDTVFund}});
+    SingularDTVCrowdfunding constant singularDTVCrowdfunding = SingularDTVCrowdfunding({{SingularDTVCrowdfunding}});
 
     /*
      *  Token meta data
      */
     string public name = "SingularDTV";
-    string public symbol = "STV";
+    string public symbol = "SNGLS";
     uint8 public decimals = 0;
 
     /*
@@ -26,30 +26,6 @@ contract SingularDTVToken is StandardToken {
     modifier workshopWaited2Years() {
         // Workshop can only transfer shares after a two years period.
         if (msg.sender == singularDTVFund.workshop() && !singularDTVCrowdfunding.workshopWaited2Years()) {
-            throw;
-        }
-        _
-    }
-
-    modifier tokensAreFungible() {
-        // Checks if the Guard already issued tokens.
-        if (!singularDTVCrowdfunding.tokensFungible()) {
-            throw;
-        }
-        _
-    }
-
-    modifier isCrowdfundingOrFundContract () {
-        // Only fund or crowdfunding contract is allowed to proceed.
-        if (msg.sender != address(singularDTVFund) && msg.sender != address(singularDTVCrowdfunding)) {
-            throw;
-        }
-        _
-    }
-
-    modifier isFundContract () {
-        // Only fund contract is allowed to proceed.
-        if (msg.sender != address(singularDTVFund)) {
             throw;
         }
         _
@@ -66,17 +42,10 @@ contract SingularDTVToken is StandardToken {
     /*
      *  Contract functions
      */
-    /// @dev Change fund. Returns success.
-    /// @param singularDTVFundAddress New fund address.
-    function changeFund(address singularDTVFundAddress) isFundContract returns (bool) {
-        singularDTVFund = SingularDTVFund(singularDTVFundAddress);
-        return true;
-    }
-
     /// @dev Crowdfunding contract issues new tokens for address. Returns success.
     /// @param _for Address of receiver.
     /// @param tokenCount Number of tokens to issue.
-    function issueTokens(address _for, uint tokenCount) isCrowdfundingOrFundContract returns (bool) {
+    function issueTokens(address _for, uint tokenCount) isCrowdfundingContract returns (bool) {
         balances[_for] += tokenCount;
         totalSupply += tokenCount;
         return true;
@@ -85,7 +54,7 @@ contract SingularDTVToken is StandardToken {
     /// @dev Crowdfunding contract issues new tokens for address. Returns success.
     /// @param _for Address of receiver.
     /// @param tokenCount Number of tokens to issue.
-    function revokeTokens(address _for, uint tokenCount) isCrowdfundingOrFundContract returns (bool) {
+    function revokeTokens(address _for, uint tokenCount) isCrowdfundingContract returns (bool) {
         if (tokenCount <= balances[_for]) {
             balances[_for] -= tokenCount;
             totalSupply -= tokenCount;
@@ -98,7 +67,6 @@ contract SingularDTVToken is StandardToken {
     /// @param to Address of token receiver.
     /// @param value Number of tokens to transfer.
     function transfer(address to, uint256 value)
-        tokensAreFungible
         workshopWaited2Years
         returns (bool)
     {
@@ -113,7 +81,6 @@ contract SingularDTVToken is StandardToken {
     /// @param to Address to where tokens are sent.
     /// @param value Number of tokens to transfer.
     function transferFrom(address from, address to, uint256 value)
-        tokensAreFungible
         workshopWaited2Years
         returns (bool)
     {
