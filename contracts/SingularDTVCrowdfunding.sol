@@ -79,13 +79,11 @@ contract SingularDTVCrowdfunding is SingularDTVWeifund {
     }
 
     modifier timedTransitions() {
-        if ((stage == Stages.CrowdfundingGoingAndGoalNotReached || stage == Stages.CrowdfundingGoingAndGoalReached)
-            && now - startDate >= CROWDFUNDING_PERIOD)
-        {
+        if (now - startDate >= CROWDFUNDING_PERIOD) {
             if (stage == Stages.CrowdfundingGoingAndGoalNotReached) {
                 stage = Stages.CrowdfundingEndedAndGoalNotReached;
             }
-            else {
+            else if (stage == Stages.CrowdfundingGoingAndGoalReached) {
                 stage = Stages.CrowdfundingEndedAndGoalReached;
                 singularDTVToken.assignEarlyInvestorsBalances();
             }
