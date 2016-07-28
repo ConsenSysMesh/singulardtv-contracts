@@ -126,16 +126,21 @@ contract SingularDTVCrowdfunding is SingularDTVWeifund {
             // Tokens could not be issued.
             throw;
         }
+        
         // Update stage
         if (stage == Stages.CrowdfundingGoingAndGoalNotReached) {
+            if (singularDTVToken.totalSupply() >= TOKEN_TARGET) {
+                stage = Stages.CrowdfundingGoingAndGoalReached;
+            }
+        }
+        // not an else clause for the edge case that the CAP and TOKEN_TARGET are reached with one big funding
+        if (stage == Stages.CrowdfundingGoingAndGoalReached) {
             if (singularDTVToken.totalSupply() == CAP) {
                 stage = Stages.CrowdfundingEndedAndGoalReached;
                 singularDTVToken.assignEarlyInvestorsBalances();
             }
-            else if (singularDTVToken.totalSupply() >= TOKEN_TARGET) {
-                stage = Stages.CrowdfundingGoingAndGoalReached;
-            }
         }
+        
         checkInvariants();
         return tokenCount;
     }
