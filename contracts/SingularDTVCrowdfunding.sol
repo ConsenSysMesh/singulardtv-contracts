@@ -1,10 +1,11 @@
 import "AbstractSingularDTVToken.sol";
 import "AbstractSingularDTVFund.sol";
+import "AbstractCampaign.sol";
 
 
 /// @title Crowdfunding contract - Implements crowdfunding functionality.
 /// @author Stefan George - <stefan.george@consensys.net>
-contract SingularDTVCrowdfunding {
+contract SingularDTVCrowdfunding is Campaign {
 
     /*
      *  External contracts
@@ -27,14 +28,21 @@ contract SingularDTVCrowdfunding {
      */
     address public guard;
     uint public startDate;
-    uint public fundBalance;
-    uint public ethValuePerShare = 1250 szabo; // 0.00125 ETH
+    uint public amountRaised;
+    uint public valuePerShare = 1250 szabo; // 0.00125 ETH
 
     // investor address => investment in Wei
     mapping (address => uint) investments;
 
     // Initialize stage
     Stages public stage = Stages.CrowdfundingGoingAndGoalNotReached;
+
+    // Campaign attributes
+    string constant public contributeMethodABI = "fund()";
+    string constant public refundMethodABI  = "withdrawFunding()";
+    string constant public payoutMethodABI  = "withdrawForWorkshop()";
+    address constant public beneficiary = singularDTVFund.workshop();
+    uint constant public expiry = startDate + CROWDFUNDING_PERIOD;
 
     /*
      *  Constants
@@ -57,7 +65,7 @@ contract SingularDTVCrowdfunding {
 
     modifier minInvestment() {
         // User has to invest at least the ether value of one share.
-        if (msg.value < ethValuePerShare) {
+        if (msg.value < valuePerShare) {
             throw;
         }
         _
@@ -102,19 +110,19 @@ contract SingularDTVCrowdfunding {
         minInvestment
         returns (uint)
     {
-        uint tokenCount = msg.value / ethValuePerShare;
+        uint tokenCount = msg.value / valuePerShare;
         uint investment = msg.value; // Ether invested by backer.
         if (singularDTVToken.totalSupply() + tokenCount > CAP) {
             // User wants to buy more shares than available. Set shares to possible maximum.
             tokenCount = CAP - singularDTVToken.totalSupply();
-            investment = tokenCount * ethValuePerShare;
+            investment = tokenCount * valuePerShare;
             // Send change back to user.
             if (!msg.sender.send(msg.value - investment)) {
                 throw;
             }
         }
         // Update fund's and user's balance and total supply of shares.
-        fundBalance += investment;
+        amountRaised += investment;
         investments[msg.sender] += investment;
         if (!singularDTVToken.issueTokens(msg.sender, tokenCount)) {
             // Tokens could not be issued.
@@ -142,7 +150,7 @@ contract SingularDTVCrowdfunding {
         // Update fund's and user's balance and total supply of shares.
         uint investment = investments[msg.sender];
         investments[msg.sender] = 0;
-        fundBalance -= investment;
+        amountRaised -= investment;
         uint tokenCount = singularDTVToken.balanceOf(msg.sender);
         if (!singularDTVToken.revokeTokens(msg.sender, tokenCount)) {
             // Tokens could not be revoked.
@@ -160,8 +168,8 @@ contract SingularDTVCrowdfunding {
         atStage(Stages.CrowdfundingEndedAndGoalReached)
         returns (bool)
     {
-        uint value = fundBalance;
-        fundBalance = 0;
+        uint value = amountRaised;
+        amountRaised = 0;
         if (value > 0  && !singularDTVFund.workshop().send(value)) {
             throw;
         }
@@ -176,7 +184,12 @@ contract SingularDTVCrowdfunding {
     /// @dev Sets token value in Wei.
     /// @param valueInWei New value.
     function changeTokenValue(uint valueInWei) onlyGuard {
-        ethValuePerShare = valueInWei;
+        valuePerShare = valueInWei;
+    }
+
+    /// @dev Returns funding goal in Wei.
+    function fundingGoal() constant returns(uint256 amount) {
+        amount = TOKEN_TARGET * valuePerShare;
     }
 
     /// @dev Setup function sets external contracts' addresses.
