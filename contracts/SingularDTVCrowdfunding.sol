@@ -98,7 +98,7 @@ contract SingularDTVCrowdfunding is SingularDTVWeifund {
      */
 
     function checkInvariants() {
-        if (fundBalance < this.balance) {
+        if (fundBalance != this.balance) {
             throw;
         }
     }
