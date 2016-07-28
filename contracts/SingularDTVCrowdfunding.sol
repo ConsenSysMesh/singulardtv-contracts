@@ -96,6 +96,13 @@ contract SingularDTVCrowdfunding is SingularDTVWeifund {
     /*
      *  Contract functions
      */
+
+    function checkInvariants() {
+        if (fundBalance < this.balance) {
+            throw;
+        }
+    }
+
     /// @dev Allows user to fund the campaign if campaign is still going and cap not reached. Returns share count.
     function fund()
         timedTransitions
@@ -131,6 +138,7 @@ contract SingularDTVCrowdfunding is SingularDTVWeifund {
                 stage = Stages.CrowdfundingGoingAndGoalReached;
             }
         }
+        checkInvariants();
         return tokenCount;
     }
 
@@ -153,6 +161,7 @@ contract SingularDTVCrowdfunding is SingularDTVWeifund {
         if (investment > 0  && !msg.sender.send(investment)) {
             throw;
         }
+        checkInvariants();
         return true;
     }
 
@@ -166,6 +175,7 @@ contract SingularDTVCrowdfunding is SingularDTVWeifund {
         if (value > 0  && !singularDTVFund.workshop().send(value)) {
             throw;
         }
+        checkInvariants;
         return true;
     }
 
