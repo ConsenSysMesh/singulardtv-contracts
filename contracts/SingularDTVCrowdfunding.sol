@@ -1,11 +1,11 @@
 import "AbstractSingularDTVToken.sol";
 import "AbstractSingularDTVFund.sol";
-import "AbstractCampaign.sol";
+import "SingularDTVWeifund.sol";
 
 
 /// @title Crowdfunding contract - Implements crowdfunding functionality.
 /// @author Stefan George - <stefan.george@consensys.net>
-contract SingularDTVCrowdfunding is Campaign {
+contract SingularDTVCrowdfunding is SingularDTVWeifund {
 
     /*
      *  External contracts
@@ -28,29 +28,22 @@ contract SingularDTVCrowdfunding is Campaign {
      */
     address public guard;
     uint public startDate;
-    uint public amountRaised;
+    uint public fundBalance;
     uint public valuePerShare = 1250 szabo; // 0.00125 ETH
 
     // investor address => investment in Wei
-    mapping (address => uint) investments;
+    mapping (address => uint) public investments;
 
     // Initialize stage
     Stages public stage = Stages.CrowdfundingGoingAndGoalNotReached;
 
-    // Campaign attributes
-    string constant public contributeMethodABI = "fund()";
-    string constant public refundMethodABI  = "withdrawFunding()";
-    string constant public payoutMethodABI  = "withdrawForWorkshop()";
-    address constant public beneficiary = singularDTVFund.workshop();
-    uint constant public expiry = startDate + CROWDFUNDING_PERIOD;
-
     /*
      *  Constants
      */
-    uint constant CAP = 500000000; // 0.5B tokens can be sold during sale
-    uint constant CROWDFUNDING_PERIOD = 4 weeks; // 1 month
-    uint constant TOKEN_LOCKING_PERIOD = 2 years; // 2 years
-    uint constant TOKEN_TARGET = 34000000; // 34M Tokens == 42,500 ETH
+    uint constant public CAP = 500000000; // 0.5B tokens can be sold during sale
+    uint constant public CROWDFUNDING_PERIOD = 4 weeks; // 1 month
+    uint constant public TOKEN_LOCKING_PERIOD = 2 years; // 2 years
+    uint constant public TOKEN_TARGET = 34000000; // 34M Tokens == 42,500 ETH
 
     /*
      *  Modifiers
@@ -122,7 +115,7 @@ contract SingularDTVCrowdfunding is Campaign {
             }
         }
         // Update fund's and user's balance and total supply of shares.
-        amountRaised += investment;
+        fundBalance += investment;
         investments[msg.sender] += investment;
         if (!singularDTVToken.issueTokens(msg.sender, tokenCount)) {
             // Tokens could not be issued.
@@ -150,7 +143,7 @@ contract SingularDTVCrowdfunding is Campaign {
         // Update fund's and user's balance and total supply of shares.
         uint investment = investments[msg.sender];
         investments[msg.sender] = 0;
-        amountRaised -= investment;
+        fundBalance -= investment;
         uint tokenCount = singularDTVToken.balanceOf(msg.sender);
         if (!singularDTVToken.revokeTokens(msg.sender, tokenCount)) {
             // Tokens could not be revoked.
@@ -168,8 +161,8 @@ contract SingularDTVCrowdfunding is Campaign {
         atStage(Stages.CrowdfundingEndedAndGoalReached)
         returns (bool)
     {
-        uint value = amountRaised;
-        amountRaised = 0;
+        uint value = fundBalance;
+        fundBalance = 0;
         if (value > 0  && !singularDTVFund.workshop().send(value)) {
             throw;
         }
@@ -187,9 +180,28 @@ contract SingularDTVCrowdfunding is Campaign {
         valuePerShare = valueInWei;
     }
 
-    /// @dev Returns funding goal in Wei.
+    /// @notice use to determine the beneficiary destination for the campaign
+    /// @return the beneficiary address that will receive the campaign payout
+    function beneficiary() constant returns(address) {
+        return singularDTVFund.workshop();
+    }
+
+    /// @notice the time at which the campaign fails or succeeds
+    /// @return the uint unix timestamp at which time the campaign expires
+    function expiry() constant returns(uint256 timestamp) {
+        return startDate + CROWDFUNDING_PERIOD;
+    }
+
+    /// @notice the goal the campaign must reach in order for it to succeed
+    /// @return the campaign funding goal specified in wei as a uint256
     function fundingGoal() constant returns(uint256 amount) {
-        amount = TOKEN_TARGET * valuePerShare;
+        return TOKEN_TARGET * valuePerShare;
+    }
+
+    /// @notice the goal the campaign must reach in order for it to succeed
+    /// @return the campaign funding goal specified in wei as a uint256
+    function amountRaised() constant returns(uint256 amount) {
+        return fundBalance;
     }
 
     /// @dev Setup function sets external contracts' addresses.

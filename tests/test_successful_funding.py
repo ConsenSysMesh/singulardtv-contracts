@@ -132,11 +132,11 @@ class TestContract(TestCase):
         except TransactionFailed:
             self.assertEqual(self.token_contract.balanceOf(accounts[BACKER_1]), share_count_b1)
         # Workshop wants to withdraw its funding but it fails, because guard has not activated shares yet.
-        fund_balance = self.crowdfunding_contract.amountRaised()
+        fund_balance = self.crowdfunding_contract.fundBalance()
         try:
             self.crowdfunding_contract.withdrawForWorkshop(sender=keys[WS_1])
         except TransactionFailed:
-            self.assertEqual(self.crowdfunding_contract.amountRaised(), fund_balance)
+            self.assertEqual(self.crowdfunding_contract.fundBalance(), fund_balance)
         # Series A investor with address 0x0196b712a0459cbee711e7c1d34d2c85a9910379 has now 5M shares
         self.assertEqual(self.token_contract.balanceOf("0x0196b712a0459cbee711e7c1d34d2c85a9910379"), 5000000)
         # Workshop withdraws funding successfully.
