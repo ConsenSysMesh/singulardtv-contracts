@@ -27,6 +27,10 @@ contract Campaign {
     /// @return the campaign funding goal specified in wei as a uint256
     function amountRaised() constant returns(uint256 amount) {}
 
+    /// @notice use to determine the contract for the campaign
+    /// @return the contract address that will be referenced for campaign
+    function campaignContract() constant returns(address) {}
+
     // Campaign events
     event ContributionMade (address _contributor);
     event BeneficiaryPayoutClaimed (address _beneficiary, uint256 _payoutAmount);

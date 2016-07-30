@@ -81,6 +81,13 @@ class TestContract(TestCase):
             }),
             language='solidity'
         )
+        self.weifund_contract = self.s.abi_contract(
+            self.pp.process('SingularDTVWeifund.sol', add_dev_code=True, contract_dir=contract_dir, addresses={
+                'SingularDTVFund': self.a2h(self.fund_contract),
+                'SingularDTVCrowdfunding': self.a2h(self.crowdfunding_contract)
+            }),
+            language='solidity'
+        )
         # Setup contracts
         self.assertTrue(self.fund_contract.setup(self.token_contract.address))
         self.assertTrue(self.crowdfunding_contract.setup(self.fund_contract.address, self.token_contract.address))

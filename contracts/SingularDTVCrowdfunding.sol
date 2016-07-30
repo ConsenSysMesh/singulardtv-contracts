@@ -1,11 +1,10 @@
 import "AbstractSingularDTVToken.sol";
 import "AbstractSingularDTVFund.sol";
-import "SingularDTVWeifund.sol";
 
 
 /// @title Crowdfunding contract - Implements crowdfunding functionality.
 /// @author Stefan George - <stefan.george@consensys.net>
-contract SingularDTVCrowdfunding is SingularDTVWeifund {
+contract SingularDTVCrowdfunding {
 
     /*
      *  External contracts
@@ -191,30 +190,6 @@ contract SingularDTVCrowdfunding is SingularDTVWeifund {
     /// @param valueInWei New value.
     function changeTokenValue(uint valueInWei) onlyGuard {
         valuePerShare = valueInWei;
-    }
-
-    /// @notice use to determine the beneficiary destination for the campaign
-    /// @return the beneficiary address that will receive the campaign payout
-    function beneficiary() constant returns(address) {
-        return singularDTVFund.workshop();
-    }
-
-    /// @notice the time at which the campaign fails or succeeds
-    /// @return the uint unix timestamp at which time the campaign expires
-    function expiry() constant returns(uint256 timestamp) {
-        return startDate + CROWDFUNDING_PERIOD;
-    }
-
-    /// @notice the goal the campaign must reach in order for it to succeed
-    /// @return the campaign funding goal specified in wei as a uint256
-    function fundingGoal() constant returns(uint256 amount) {
-        return TOKEN_TARGET * valuePerShare;
-    }
-
-    /// @notice the goal the campaign must reach in order for it to succeed
-    /// @return the campaign funding goal specified in wei as a uint256
-    function amountRaised() constant returns(uint256 amount) {
-        return fundBalance;
     }
 
     /// @dev Setup function sets external contracts' addresses.
