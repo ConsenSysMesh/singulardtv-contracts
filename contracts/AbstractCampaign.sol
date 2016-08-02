@@ -29,7 +29,7 @@ contract Campaign {
 
     /// @notice use to determine the contract for the campaign
     /// @return the contract address that will be referenced for campaign
-    function campaignContract() constant returns(address) {}
+    function target() constant returns(address) {}
 
     // Campaign events
     event ContributionMade (address _contributor);

@@ -41,7 +41,7 @@ contract SingularDTVWeifund is Campaign {
         return singularDTVCrowdfunding.fundBalance();
     }
 
-    function campaignContract() constant returns(address) {
+    function target() constant returns(address) {
         return singularDTVCrowdfunding;
     }
 }
