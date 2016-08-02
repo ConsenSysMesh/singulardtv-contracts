@@ -190,11 +190,6 @@ contract SingularDTVCrowdfunding {
         return true;
     }
 
-    /// @dev Returns if 2 years passed since beginning of crowdfunding.
-    function workshopWaited2Years() returns (bool) {
-        return now - startDate >= TOKEN_LOCKING_PERIOD;
-    }
-
     /// @dev Sets token value in Wei.
     /// @param valueInWei New value.
     function changeTokenValue(uint valueInWei)
@@ -202,6 +197,19 @@ contract SingularDTVCrowdfunding {
         onlyGuard
     {
         valuePerShare = valueInWei;
+    }
+
+    /// @dev Returns if 2 years passed since beginning of crowdfunding.
+    function workshopWaited2Years() returns (bool) {
+        return now - startDate >= TOKEN_LOCKING_PERIOD;
+    }
+
+    /// @dev Returns if campaign ended successfully.
+    function campaignEndedSuccessfully() returns (bool) {
+        if (stage == Stages.CrowdfundingEndedAndGoalReached) {
+            return true;
+        }
+        return false;
     }
 
     /// @dev Setup function sets external contracts' addresses.

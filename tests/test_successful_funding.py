@@ -89,7 +89,7 @@ class TestContract(TestCase):
             language='solidity'
         )
         # Setup contracts
-        self.assertTrue(self.fund_contract.setup(self.token_contract.address))
+        self.assertTrue(self.fund_contract.setup(self.crowdfunding_contract.address, self.token_contract.address))
         self.assertTrue(self.crowdfunding_contract.setup(self.fund_contract.address, self.token_contract.address))
 
     @staticmethod

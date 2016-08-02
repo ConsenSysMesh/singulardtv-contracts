@@ -1,4 +1,5 @@
 import "AbstractSingularDTVToken.sol";
+import "AbstractSingularDTVCrowdfunding.sol";
 
 
 /// @title Fund contract - Implements revenue distribution.
@@ -9,6 +10,7 @@ contract SingularDTVFund {
      *  External contracts
      */
     SingularDTVToken public singularDTVToken;
+    SingularDTVCrowdfunding public singularDTVCrowdfunding;
 
     /*
      *  Storage
@@ -38,11 +40,22 @@ contract SingularDTVFund {
         _
     }
 
+    modifier campaignEndedSuccessfully() {
+        // Only guard is allowed to do this action.
+        if (!singularDTVCrowdfunding.campaignEndedSuccessfully()) {
+            throw;
+        }
+        _
+    }
+
     /*
      *  Contract functions
      */
     /// @dev Deposits revenue. Returns success.
-    function depositRevenue() returns (bool) {
+    function depositRevenue()
+        campaignEndedSuccessfully
+        returns (bool)
+    {
         totalRevenue += msg.value;
         return true;
     }
@@ -70,12 +83,13 @@ contract SingularDTVFund {
 
     /// @dev Setup function sets external contracts' addresses.
     /// @param singularDTVTokenAddress Token address.
-    function setup(address singularDTVTokenAddress)
+    function setup(address singularDTVCrowdfundingAddress, address singularDTVTokenAddress)
         noEther
         onlyOwner
         returns (bool)
     {
-        if (address(singularDTVToken) == 0) {
+        if (address(singularDTVCrowdfunding) == 0 || address(singularDTVToken) == 0) {
+            singularDTVCrowdfunding = SingularDTVCrowdfunding(singularDTVCrowdfundingAddress);
             singularDTVToken = SingularDTVToken(singularDTVTokenAddress);
             return true;
         }
