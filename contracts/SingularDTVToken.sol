@@ -53,21 +53,12 @@ contract SingularDTVToken is StandardToken {
     /// @param _for Address of receiver.
     /// @param tokenCount Number of tokens to issue.
     function issueTokens(address _for, uint tokenCount) isCrowdfundingContract returns (bool) {
+        if (tokenCount == 0) {
+            return false;
+        }
         balances[_for] += tokenCount;
         totalSupply += tokenCount;
         return true;
-    }
-
-    /// @dev Crowdfunding contract issues new tokens for address. Returns success.
-    /// @param _for Address of receiver.
-    /// @param tokenCount Number of tokens to issue.
-    function revokeTokens(address _for, uint tokenCount) isCrowdfundingContract returns (bool) {
-        if (tokenCount <= balances[_for]) {
-            balances[_for] -= tokenCount;
-            totalSupply -= tokenCount;
-            return true;
-        }
-        return false;
     }
 
     /// @dev Transfers sender's tokens to a given address. Returns success.
@@ -99,8 +90,8 @@ contract SingularDTVToken is StandardToken {
         return super.transferFrom(from, to, value);
     }
 
-    /// @dev Contract constructor function sets guard and initial token balances.
-    function assignEarlyInvestorsBalances() isCrowdfundingContract {
+    /// @dev Contract constructor function sets initial token balances.
+    function SingularDTVToken() {
         // Set initial share distribution
         balances[singularDTVFund.workshop()] += 400070000; // ~400M
         // Series A investors

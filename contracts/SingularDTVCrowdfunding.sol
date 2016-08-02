@@ -39,7 +39,7 @@ contract SingularDTVCrowdfunding {
     /*
      *  Constants
      */
-    uint constant public CAP = 500000000; // 0.5B tokens can be sold during sale
+    uint constant public CAP = 1000000000; // 1B tokens is the maximum amount of tokens
     uint constant public CROWDFUNDING_PERIOD = 4 weeks; // 1 month
     uint constant public TOKEN_LOCKING_PERIOD = 2 years; // 2 years
     uint constant public TOKEN_TARGET = 34000000; // 34M Tokens == 42,500 ETH
@@ -91,7 +91,6 @@ contract SingularDTVCrowdfunding {
             }
             else if (stage == Stages.CrowdfundingGoingAndGoalReached) {
                 stage = Stages.CrowdfundingEndedAndGoalReached;
-                singularDTVToken.assignEarlyInvestorsBalances();
             }
         }
         _
@@ -132,7 +131,6 @@ contract SingularDTVCrowdfunding {
             // Tokens could not be issued.
             throw;
         }
-        
         // Update stage
         if (stage == Stages.CrowdfundingGoingAndGoalNotReached) {
             if (singularDTVToken.totalSupply() >= TOKEN_TARGET) {
@@ -143,10 +141,8 @@ contract SingularDTVCrowdfunding {
         if (stage == Stages.CrowdfundingGoingAndGoalReached) {
             if (singularDTVToken.totalSupply() == CAP) {
                 stage = Stages.CrowdfundingEndedAndGoalReached;
-                singularDTVToken.assignEarlyInvestorsBalances();
             }
         }
-        
         checkInvariants();
         return tokenCount;
     }
@@ -162,11 +158,6 @@ contract SingularDTVCrowdfunding {
         uint investment = investments[msg.sender];
         investments[msg.sender] = 0;
         fundBalance -= investment;
-        uint tokenCount = singularDTVToken.balanceOf(msg.sender);
-        if (!singularDTVToken.revokeTokens(msg.sender, tokenCount)) {
-            // Tokens could not be revoked.
-            throw;
-        }
         // Send funds back to user.
         if (investment > 0  && !msg.sender.send(investment)) {
             throw;

@@ -24,7 +24,6 @@ DAILY_LIMIT = 10**18*1000  # 1000 ETH
 
 # Fund contract
 MAX_TOKEN_COUNT = 1000000000  # 1.0B
-CAP = 500000000  # 0.5B
 WORKSHOP_TOKEN_COUNT = 400070000  # ~400M
 TOKEN_LOCKING_PERIOD = 63072000  # 2 years
 CROWDFUNDING_PERIOD = 2419200  # 4 weeks
@@ -99,10 +98,10 @@ class TestContract(TestCase):
     def test(self):
         # Crowdfunding has started and startDate has been set.
         self.assertEqual(self.crowdfunding_contract.startDate(), self.s.block.timestamp)
-        # Series A investor with address 0x0196b712a0459cbee711e7c1d34d2c85a9910379 has 9 shares until sale successful
-        self.assertEqual(self.token_contract.balanceOf("0x0196b712a0459cbee711e7c1d34d2c85a9910379"), 0)
-        # No shares have been created yet.
-        self.assertEqual(self.token_contract.totalSupply(), 0)
+        # Series A investor with address 0x0196b712a0459cbee711e7c1d34d2c85a9910379 has 5000000 shares
+        self.assertEqual(self.token_contract.balanceOf("0x0196b712a0459cbee711e7c1d34d2c85a9910379"), 5000000)
+        # 500000000 shares have been issued.
+        self.assertEqual(self.token_contract.totalSupply(), 500000000)
         # Backer 1 starts funding, but doesn't send enough money to buy a share, transaction fails.
         try:
             self.crowdfunding_contract.fund(value=ETH_VALUE_PER_SHARE - 1, sender=keys[BACKER_1])
@@ -122,7 +121,7 @@ class TestContract(TestCase):
         # Backer 1 has now share_count shares
         self.assertEqual(self.token_contract.balanceOf(accounts[BACKER_1]), share_count_b1)
         # Backer 2 invests too and wants to buy more shares than possible. He gets the maximum amount possible.
-        share_count_b2 = CAP
+        share_count_b2 = MAX_TOKEN_COUNT / 2
         self.assertEqual(self.crowdfunding_contract.fund(value=ETH_VALUE_PER_SHARE * share_count_b2, sender=keys[BACKER_2]),
                          share_count_b2 - share_count_b1)
         # Backer 1 wants to buy more shares too, but the cap has been reached already
