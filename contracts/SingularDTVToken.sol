@@ -23,6 +23,13 @@ contract SingularDTVToken is StandardToken {
     /*
      *  Modifiers
      */
+    modifier noEther() {
+        if (msg.value > 0) {
+            throw;
+        }
+        _
+    }
+
     modifier workshopWaited2Years() {
         // Workshop can only transfer shares after a two years period.
         if (msg.sender == singularDTVFund.workshop() && !singularDTVCrowdfunding.workshopWaited2Years()) {
@@ -67,6 +74,7 @@ contract SingularDTVToken is StandardToken {
     /// @param to Address of token receiver.
     /// @param value Number of tokens to transfer.
     function transfer(address to, uint256 value)
+        noEther
         workshopWaited2Years
         returns (bool)
     {
@@ -81,6 +89,7 @@ contract SingularDTVToken is StandardToken {
     /// @param to Address to where tokens are sent.
     /// @param value Number of tokens to transfer.
     function transferFrom(address from, address to, uint256 value)
+        noEther
         workshopWaited2Years
         returns (bool)
     {

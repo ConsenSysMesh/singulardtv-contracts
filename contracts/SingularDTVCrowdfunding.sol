@@ -47,6 +47,13 @@ contract SingularDTVCrowdfunding {
     /*
      *  Modifiers
      */
+    modifier noEther() {
+        if (msg.value > 0) {
+            throw;
+        }
+        _
+    }
+
     modifier onlyGuard() {
         // Only guard is allowed to do this action.
         if (msg.sender != guard) {
@@ -146,6 +153,7 @@ contract SingularDTVCrowdfunding {
 
     /// @dev Allows user to withdraw his funding if crowdfunding ended and target was not reached. Returns success.
     function withdrawFunding()
+        noEther
         timedTransitions
         atStage(Stages.CrowdfundingEndedAndGoalNotReached)
         returns (bool)
@@ -169,6 +177,7 @@ contract SingularDTVCrowdfunding {
 
     /// @dev Withdraws funding for workshop. Returns success.
     function withdrawForWorkshop()
+        noEther
         atStage(Stages.CrowdfundingEndedAndGoalReached)
         returns (bool)
     {
@@ -188,14 +197,21 @@ contract SingularDTVCrowdfunding {
 
     /// @dev Sets token value in Wei.
     /// @param valueInWei New value.
-    function changeTokenValue(uint valueInWei) onlyGuard {
+    function changeTokenValue(uint valueInWei)
+        noEther
+        onlyGuard
+    {
         valuePerShare = valueInWei;
     }
 
     /// @dev Setup function sets external contracts' addresses.
     /// @param singularDTVFundAddress Crowdfunding address.
     /// @param singularDTVTokenAddress Token address.
-    function setup(address singularDTVFundAddress, address singularDTVTokenAddress) onlyGuard returns (bool) {
+    function setup(address singularDTVFundAddress, address singularDTVTokenAddress)
+        onlyGuard
+        noEther
+        returns (bool)
+    {
         if (address(singularDTVFund) == 0 || address(singularDTVToken) == 0) {
             singularDTVFund = SingularDTVFund(singularDTVFundAddress);
             singularDTVToken = SingularDTVToken(singularDTVTokenAddress);

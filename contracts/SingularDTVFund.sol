@@ -23,6 +23,13 @@ contract SingularDTVFund {
     /*
      *  Modifiers
      */
+    modifier noEther() {
+        if (msg.value > 0) {
+            throw;
+        }
+        _
+    }
+
     modifier onlyOwner() {
         // Only guard is allowed to do this action.
         if (msg.sender != owner) {
@@ -42,7 +49,10 @@ contract SingularDTVFund {
 
     /// @dev Withdraws revenue share for user. Returns revenue share.
     /// @param reinvestToWorkshop User can reinvest his revenue share. The workshop always reinvests its revenue share.
-    function withdrawRevenue(address forAddress, bool reinvestToWorkshop) returns (uint) {
+    function withdrawRevenue(address forAddress, bool reinvestToWorkshop)
+        noEther
+        returns (uint)
+    {
         uint value = singularDTVToken.balanceOf(forAddress) * (totalRevenue - revenueAtTimeOfWithdraw[forAddress]) / singularDTVToken.totalSupply();
         revenueAtTimeOfWithdraw[forAddress] = totalRevenue;
         if (reinvestToWorkshop || forAddress == workshop) {
@@ -60,7 +70,11 @@ contract SingularDTVFund {
 
     /// @dev Setup function sets external contracts' addresses.
     /// @param singularDTVTokenAddress Token address.
-    function setup(address singularDTVTokenAddress) onlyOwner returns (bool) {
+    function setup(address singularDTVTokenAddress)
+        noEther
+        onlyOwner
+        returns (bool)
+    {
         if (address(singularDTVToken) == 0) {
             singularDTVToken = SingularDTVToken(singularDTVTokenAddress);
             return true;
