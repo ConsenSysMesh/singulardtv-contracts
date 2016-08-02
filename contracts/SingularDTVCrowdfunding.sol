@@ -13,6 +13,15 @@ contract SingularDTVCrowdfunding {
     SingularDTVFund public singularDTVFund;
 
     /*
+     *  Constants
+     */
+    uint constant public CAP = 1000000000; // 1B tokens is the maximum amount of tokens
+    uint constant public CROWDFUNDING_PERIOD = 4 weeks; // 1 month
+    uint constant public TOKEN_LOCKING_PERIOD = 2 years; // 2 years
+    uint constant public TOKEN_TARGET = 34000000; // 34M Tokens == 42,500 ETH
+    uint constant public BASE_VALUE = 1250 szabo; // 0.00125 ETH
+
+    /*
      *  Enums
      */
     enum Stages {
@@ -28,21 +37,13 @@ contract SingularDTVCrowdfunding {
     address public guard;
     uint public startDate;
     uint public fundBalance;
-    uint public valuePerShare = 1250 szabo; // 0.00125 ETH
+    uint public valuePerShare = BASE_VALUE; // 0.00125 ETH
 
     // investor address => investment in Wei
     mapping (address => uint) public investments;
 
     // Initialize stage
     Stages public stage = Stages.CrowdfundingGoingAndGoalNotReached;
-
-    /*
-     *  Constants
-     */
-    uint constant public CAP = 1000000000; // 1B tokens is the maximum amount of tokens
-    uint constant public CROWDFUNDING_PERIOD = 4 weeks; // 1 month
-    uint constant public TOKEN_LOCKING_PERIOD = 2 years; // 2 years
-    uint constant public TOKEN_TARGET = 34000000; // 34M Tokens == 42,500 ETH
 
     /*
      *  Modifiers
@@ -85,6 +86,18 @@ contract SingularDTVCrowdfunding {
     }
 
     modifier timedTransitions() {
+        if (now - startDate >= 22 days) {
+            valuePerShare = BASE_VALUE * 5;
+        }
+        else if (now - startDate >= 18 days) {
+            valuePerShare = BASE_VALUE * 4;
+        }
+        else if (now - startDate >= 14 days) {
+            valuePerShare = BASE_VALUE * 3;
+        }
+        else if (now - startDate >= 10 days) {
+            valuePerShare = BASE_VALUE * 2;
+        }
         if (now - startDate >= CROWDFUNDING_PERIOD) {
             if (stage == Stages.CrowdfundingGoingAndGoalNotReached) {
                 stage = Stages.CrowdfundingEndedAndGoalNotReached;
@@ -179,15 +192,6 @@ contract SingularDTVCrowdfunding {
         }
         checkInvariants;
         return true;
-    }
-
-    /// @dev Sets token value in Wei.
-    /// @param valueInWei New value.
-    function changeTokenValue(uint valueInWei)
-        noEther
-        onlyGuard
-    {
-        valuePerShare = valueInWei;
     }
 
     /// @dev Returns if 2 years passed since beginning of crowdfunding.
