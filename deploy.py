@@ -52,7 +52,7 @@ def deploy_code(json_rpc, coinbase, file_path, construtor_params, contract_addre
 
 
 def do_transaction(json_rpc, coinbase, contract, name, params, gas, gas_price):
-    contract_address = addresses[contract]
+    contract_address = addresses[contract] if contract in addresses else contract
     contract_abi = abis[contract]
     translator = ContractTranslator(contract_abi)
     data = translator.encode(name, [addresses[param] if param in addresses else param for param in params]).encode("hex")
