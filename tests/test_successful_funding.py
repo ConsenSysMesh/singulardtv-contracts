@@ -158,7 +158,7 @@ class TestContract(TestCase):
         # WS reinvests its revenue
         reinvest = False
         withdraw_data = self.fund_contract.translator.encode("withdrawRevenue", [self.mist_wallet_contract.address, reinvest])
-        revenue_share = revenue * 400070000 / MAX_TOKEN_COUNT
+        revenue_share = revenue * 400000000 / MAX_TOKEN_COUNT
         wallet_balance = self.s.block.get_balance(self.mist_wallet_contract.address)
         self.mist_wallet_contract.execute(self.fund_contract.address, 0, withdraw_data, value=0)
         # The wallet's balance increased.

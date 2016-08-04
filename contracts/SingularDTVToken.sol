@@ -16,9 +16,9 @@ contract SingularDTVToken is StandardToken {
     /*
      *  Token meta data
      */
-    string public name = "SingularDTV";
-    string public symbol = "SNGL";
-    uint8 public decimals = 0;
+    string constant public name = "SingularDTV";
+    string constant public symbol = "SNGL";
+    uint8 constant public decimals = 0;
 
     /*
      *  Modifiers
