@@ -1,0 +1,45 @@
+[
+    {
+        "type": "deployment",
+        "file": "MistWallet.sol",
+        "constructorParams": [
+            ["0xf7f139ea1fe65435e984a9171e4211510d0195e6"],
+            0,
+            1000000000000000
+        ]
+    },
+    {
+        "type": "deployment",
+        "file": "SingularDTVFund.sol"
+    },
+    {
+        "type": "deployment",
+        "file": "SingularDTVCrowdfunding.sol"
+    },
+    {
+        "type": "deployment",
+        "file": "SingularDTVToken.sol"
+    },
+    {
+        "type": "deployment",
+        "file": "SingularDTVWeifund.sol"
+    },
+    {
+        "type": "transaction",
+        "contract": "SingularDTVFund",
+        "name": "setup",
+        "params": [
+            "SingularDTVCrowdfunding",
+            "SingularDTVToken"
+        ]
+    },
+    {
+        "type": "transaction",
+        "contract": "SingularDTVCrowdfunding",
+        "name": "setup",
+        "params": [
+            "SingularDTVFund",
+            "SingularDTVToken"
+        ]
+    }
+]
