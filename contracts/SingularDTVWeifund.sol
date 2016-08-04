@@ -13,6 +13,7 @@ contract SingularDTVWeifund is Campaign {
     SingularDTVFund constant singularDTVFund = SingularDTVFund({{SingularDTVFund}});
     SingularDTVCrowdfunding constant singularDTVCrowdfunding = SingularDTVCrowdfunding({{SingularDTVCrowdfunding}});
 
+    string constant public name = "SingularDTV Campaign";
     string constant public contributeMethodABI = "fund()";
     string constant public refundMethodABI = "withdrawFunding()";
     string constant public payoutMethodABI = "withdrawForWorkshop()";
@@ -39,9 +40,5 @@ contract SingularDTVWeifund is Campaign {
     /// @return the campaign funding goal specified in wei as a uint256
     function amountRaised() constant returns(uint256 amount) {
         return singularDTVCrowdfunding.fundBalance();
-    }
-
-    function target() constant returns(address) {
-        return singularDTVCrowdfunding;
     }
 }

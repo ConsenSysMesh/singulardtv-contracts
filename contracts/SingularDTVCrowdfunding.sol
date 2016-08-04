@@ -112,7 +112,7 @@ contract SingularDTVCrowdfunding {
     /*
      *  Contract functions
      */
-
+    /// dev Validates invariants.
     function checkInvariants() {
         if (fundBalance != this.balance) {
             throw;
@@ -223,7 +223,7 @@ contract SingularDTVCrowdfunding {
         return false;
     }
 
-    /// @dev Contract constructor function sets guard and initial token balances.
+    /// @dev Contract constructor function sets guard and start date.
     function SingularDTVCrowdfunding() {
         // Set guard address
         guard = msg.sender;
