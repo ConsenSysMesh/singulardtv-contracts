@@ -1,4 +1,8 @@
 contract Campaign {
+    /// @notice the campaign name
+    /// @return contractual metadata which specifies the campaign name as a string
+    function name() constant returns(string) {}
+
     /// @notice use to determine the contribution method abi
     /// @return will return a string that is the exact contributeMethodABI
     function contributeMethodABI() constant returns(string) {}
@@ -27,11 +31,8 @@ contract Campaign {
     /// @return the campaign funding goal specified in wei as a uint256
     function amountRaised() constant returns(uint256 amount) {}
 
-    /// @notice use to determine the contract for the campaign
-    /// @return the contract address that will be referenced for campaign
-    function target() constant returns(address) {}
-
     // Campaign events
     event ContributionMade (address _contributor);
+    event RefundPayoutClaimed(uint256 _contributionID);
     event BeneficiaryPayoutClaimed (address _beneficiary, uint256 _payoutAmount);
 }
