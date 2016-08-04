@@ -10,7 +10,10 @@
     },
     {
         "type": "deployment",
-        "file": "SingularDTVFund.sol"
+        "file": "SingularDTVFund.sol",
+        "addresses": {
+            "MistWallet": "0xf7f139ea1fe65435e984a9171e4211510d0195e6"
+        }
     },
     {
         "type": "deployment",

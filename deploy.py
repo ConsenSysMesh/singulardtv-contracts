@@ -18,16 +18,22 @@ def wait_for_transaction_receipt(json_rpc, transaction_hash):
         time.sleep(5)
 
 
-def deploy_code(json_rpc, coinbase, file_path, construtor_params, add_dev_code, contract_dir, gas, gas_price):
+def deploy_code(json_rpc, coinbase, file_path, construtor_params, contract_addresses, add_dev_code, contract_dir, gas, gas_price):
     if file_path not in addresses.keys():
+        if contract_addresses:
+            a_copy = addresses.copy()
+            a_copy.update(contract_addresses)
+            contract_addresses = a_copy
+        else:
+            contract_addresses = addresses
         language = "solidity" if file_path.endswith(".sol") else "serpent"
-        code = pp.process(file_path, add_dev_code=add_dev_code, contract_dir=contract_dir, addresses=addresses)
+        code = pp.process(file_path, add_dev_code=add_dev_code, contract_dir=contract_dir, addresses=contract_addresses)
         # compile code
         combined = languages[language].combined(code)
         compiled_code = combined[-1][1]["bin_hex"]
         abi = combined[-1][1]["abi"]
         # replace library placeholders
-        for library_name, library_address in addresses.iteritems():
+        for library_name, library_address in contract_addresses.iteritems():
             compiled_code = compiled_code.replace("__{}{}".format(library_name, "_" * (38-len(library_name))), library_address[2:])
         if construtor_params:
             translator = ContractTranslator(abi)
@@ -78,6 +84,7 @@ def setup(f, host, port, add_dev_code, contract_dir, gas, gas_price):
                 coinbase,
                 instruction["file"],
                 instruction["constructorParams"] if "constructorParams" in instruction else None,
+                instruction["addresses"] if "addresses" in instruction else None,
                 add_dev_code == "true",
                 contract_dir,
                 int(gas),
