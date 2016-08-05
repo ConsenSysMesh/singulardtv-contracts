@@ -190,7 +190,7 @@ contract SingularDTVCrowdfunding {
         if (value > 0  && !singularDTVFund.workshop().send(value)) {
             throw;
         }
-        checkInvariants;
+        checkInvariants();
         return true;
     }
 
