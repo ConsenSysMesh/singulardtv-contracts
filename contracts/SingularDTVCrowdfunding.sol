@@ -121,6 +121,7 @@ contract SingularDTVCrowdfunding {
 
     /// @dev Allows user to fund the campaign if campaign is still going and cap not reached. Returns share count.
     function fund()
+        external
         timedTransitions
         atStageOR(Stages.CrowdfundingGoingAndGoalNotReached, Stages.CrowdfundingGoingAndGoalReached)
         minInvestment
@@ -162,6 +163,7 @@ contract SingularDTVCrowdfunding {
 
     /// @dev Allows user to withdraw his funding if crowdfunding ended and target was not reached. Returns success.
     function withdrawFunding()
+        external
         noEther
         timedTransitions
         atStage(Stages.CrowdfundingEndedAndGoalNotReached)
@@ -181,6 +183,7 @@ contract SingularDTVCrowdfunding {
 
     /// @dev Withdraws funding for workshop. Returns success.
     function withdrawForWorkshop()
+        external
         noEther
         atStage(Stages.CrowdfundingEndedAndGoalReached)
         returns (bool)
@@ -197,6 +200,7 @@ contract SingularDTVCrowdfunding {
     /// @dev Sets token value in Wei.
     /// @param valueInWei New value.
     function changeBaseValue(uint valueInWei)
+        external
         noEther
         onlyGuard
         returns (bool)
@@ -206,12 +210,12 @@ contract SingularDTVCrowdfunding {
     }
 
     /// @dev Returns if 2 years passed since beginning of crowdfunding.
-    function workshopWaited2Years() returns (bool) {
+    function workshopWaited2Years() external returns (bool) {
         return now - startDate >= TOKEN_LOCKING_PERIOD;
     }
 
     /// @dev Returns if campaign ended successfully.
-    function campaignEndedSuccessfully() returns (bool) {
+    function campaignEndedSuccessfully() external returns (bool) {
         if (stage == Stages.CrowdfundingEndedAndGoalReached) {
             return true;
         }
@@ -222,6 +226,7 @@ contract SingularDTVCrowdfunding {
     /// @param singularDTVFundAddress Crowdfunding address.
     /// @param singularDTVTokenAddress Token address.
     function setup(address singularDTVFundAddress, address singularDTVTokenAddress)
+        external
         onlyGuard
         noEther
         returns (bool)

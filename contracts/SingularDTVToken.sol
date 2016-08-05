@@ -52,7 +52,11 @@ contract SingularDTVToken is StandardToken {
     /// @dev Crowdfunding contract issues new tokens for address. Returns success.
     /// @param _for Address of receiver.
     /// @param tokenCount Number of tokens to issue.
-    function issueTokens(address _for, uint tokenCount) isCrowdfundingContract returns (bool) {
+    function issueTokens(address _for, uint tokenCount)
+        external
+        isCrowdfundingContract
+        returns (bool)
+    {
         if (tokenCount == 0) {
             return false;
         }
