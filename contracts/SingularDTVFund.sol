@@ -40,14 +40,6 @@ contract SingularDTVFund {
         _
     }
 
-    modifier onlySingularDTVToken() {
-        // Only guard is allowed to do this action.
-        if (msg.sender != address(singularDTVToken)) {
-            throw;
-        }
-        _
-    }
-
     modifier campaignEndedSuccessfully() {
         if (!singularDTVCrowdfunding.campaignEndedSuccessfully()) {
             throw;
@@ -68,41 +60,14 @@ contract SingularDTVFund {
         return true;
     }
 
-    function calcRevenueShare(address forAddress) internal returns (uint) {
-        return singularDTVToken.balanceOf(forAddress) * (totalRevenue - revenueAtTimeOfWithdraw[forAddress]) / singularDTVToken.totalSupply();
-    }
-
-    /// @dev Withdraws revenue share for user. Returns revenue share.
-    /// @param reinvestToWorkshop User can reinvest his revenue share. The workshop always reinvests its revenue share.
-    function withdrawRevenue(bool reinvestToWorkshop)
-        external
-        noEther
-        returns (uint)
-    {
-        uint value = calcRevenueShare(msg.sender);
-        revenueAtTimeOfWithdraw[msg.sender] = totalRevenue;
-        if (reinvestToWorkshop || msg.sender == workshop) {
-            if (value > 0 && !workshop.send(value)) {
-                throw;
-            }
-        }
-        else {
-            if (value > 0 && !msg.sender.send(value)) {
-                throw;
-            }
-        }
-        return value;
-    }
-
     /// @dev Withdraws revenue share for user. Returns revenue share.
     /// @param forAddress Shareholder's address.
     function withdrawRevenueFor(address forAddress)
         external
         noEther
-        onlySingularDTVToken
         returns (uint)
     {
-        uint value = calcRevenueShare(forAddress);
+        uint value = singularDTVToken.balanceOf(forAddress) * (totalRevenue - revenueAtTimeOfWithdraw[forAddress]) / singularDTVToken.totalSupply();
         revenueAtTimeOfWithdraw[forAddress] = totalRevenue;
         if (value > 0 && !forAddress.send(value)) {
             throw;
