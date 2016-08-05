@@ -34,7 +34,7 @@ ETH_TARGET = 10**18 * 100000  # 100.000 ETH
 
 class TestContract(TestCase):
     """
-    run test with python -m unittest test_successful_funding
+    run test with python -m unittest tests.test_successful_funding
     """
 
     HOMESTEAD_BLOCK = 1150000
@@ -47,7 +47,7 @@ class TestContract(TestCase):
         t.gas_limit = 4712388
 
     def setUp(self):
-        contract_dir = '../contracts/'
+        contract_dir = 'contracts/'
         self.s.block.number = self.HOMESTEAD_BLOCK
         # Create mist wallet
         constructor_parameters = (

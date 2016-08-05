@@ -2,13 +2,19 @@
 
 Use `vagrant up` then
 
+### To run all tests:
+`cd /vagrant/`
+`python -m unittest discover tests`
+
+### Run one test:
+`cd /vagrant/`
+`python -m unittest tests.test_successful_funding`
+
 ### To run the testrpc:
 `./testrpc_command.sh`
 
 ### To deploy the contracts:
-`python deploy.py -f deploy.txt -add_dev_code true`
-or
-`python deploy.py -f token_deploy.txt -add_dev_code true -contract_dir token_contracts/`
+`python deploy.py -f deploy.json`
 
 ### To generate the ABIs:
 `python generate_abi.py`
