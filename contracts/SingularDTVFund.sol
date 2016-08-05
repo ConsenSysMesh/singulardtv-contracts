@@ -41,7 +41,6 @@ contract SingularDTVFund {
     }
 
     modifier campaignEndedSuccessfully() {
-        // Only guard is allowed to do this action.
         if (!singularDTVCrowdfunding.campaignEndedSuccessfully()) {
             throw;
         }
