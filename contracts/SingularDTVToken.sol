@@ -116,7 +116,6 @@ contract SingularDTVToken is StandardToken {
         balances[0x781ba492f786b2be48c2884b733874639f50022c] += 500000;
         balances[0x79b48f6f1ac373648c509b74a2c04a3281066457] += 2000000;
         balances[0x835898804ed30e20aa29f2fe35c9f225175b049f] += 100000;
-        balances[0x93bf1d2b1c8304f61176e7a5a36a3efd658b1b33] += 50000;
         balances[0x93c56ea8848150389e0917de868b0a23c87cf7b1] += 2790000;
         balances[0x93f959df3df3c6ee01ee9748327b881b2137bf2a] += 450000;
         balances[0x9adc0215372e4ffd8c89621a6bd9cfddf230349f] += 550000;
@@ -130,7 +129,7 @@ contract SingularDTVToken is StandardToken {
         balances[0xe4f7d5083baeea7810b6d816581bb0ee7cd4b6f4] += 10560000;
         balances[0xef08eb55d3482973c178b02bd4d5f2cea420325f] += 80000;
         balances[0xfdecc9f2ee374cedc94f72ab4da2de896ce58c19] += 5000000;
-        balances[0xe5ff71dc1dea8cd2552eec59e9a5e8813da9bb01] += 29060000;
+        balances[0xe5ff71dc1dea8cd2552eec59e9a5e8813da9bb01] += 29110000;
         totalSupply += 500000000; // 500M
     }
 }
