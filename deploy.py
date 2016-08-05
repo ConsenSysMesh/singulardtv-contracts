@@ -18,7 +18,7 @@ def wait_for_transaction_receipt(json_rpc, transaction_hash):
         time.sleep(5)
 
 
-def deploy_code(json_rpc, coinbase, file_path, construtor_params, contract_addresses, add_dev_code, contract_dir, gas, gas_price):
+def deploy_code(json_rpc, coinbase, file_path, constructor_params, contract_addresses, add_dev_code, contract_dir, gas, gas_price):
     if file_path not in addresses.keys():
         if contract_addresses:
             a_copy = addresses.copy()
@@ -35,9 +35,9 @@ def deploy_code(json_rpc, coinbase, file_path, construtor_params, contract_addre
         # replace library placeholders
         for library_name, library_address in contract_addresses.iteritems():
             compiled_code = compiled_code.replace("__{}{}".format(library_name, "_" * (38-len(library_name))), library_address[2:])
-        if construtor_params:
+        if constructor_params:
             translator = ContractTranslator(abi)
-            compiled_code += translator.encode_constructor_arguments(construtor_params).encode("hex")
+            compiled_code += translator.encode_constructor_arguments(constructor_params).encode("hex")
         print 'Try to create contract with length {} based on code in file: {}'.format(len(compiled_code), file_path)
         transaction_hash = json_rpc.eth_sendTransaction(coinbase, data=compiled_code, gas=gas, gas_price=gas_price)["result"]
         wait_for_transaction_receipt(json_rpc, transaction_hash)
