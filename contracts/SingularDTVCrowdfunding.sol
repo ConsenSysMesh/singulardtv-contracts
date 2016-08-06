@@ -33,7 +33,7 @@ contract SingularDTVCrowdfunding {
     /*
      *  Storage
      */
-    address public guard;
+    address public owner;
     uint public startDate;
     uint public fundBalance;
     uint public baseValue = 1250 szabo; // 0.00125 ETH
@@ -56,8 +56,8 @@ contract SingularDTVCrowdfunding {
     }
 
     modifier onlyGuard() {
-        // Only guard is allowed to do this action.
-        if (msg.sender != guard) {
+        // Only owner is allowed to do this action.
+        if (msg.sender != owner) {
             throw;
         }
         _
@@ -227,7 +227,7 @@ contract SingularDTVCrowdfunding {
     /// @param singularDTVTokenAddress Token address.
     function setup(address singularDTVFundAddress, address singularDTVTokenAddress)
         external
-        onlyGuard
+        onlyOwner
         noEther
         returns (bool)
     {
@@ -239,10 +239,10 @@ contract SingularDTVCrowdfunding {
         return false;
     }
 
-    /// @dev Contract constructor function sets guard and start date.
+    /// @dev Contract constructor function sets owner and start date.
     function SingularDTVCrowdfunding() {
-        // Set guard address
-        guard = msg.sender;
+        // Set owner address
+        owner = msg.sender;
         // Set start-date of crowdfunding
         startDate = now;
     }
