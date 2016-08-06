@@ -55,7 +55,7 @@ contract SingularDTVCrowdfunding {
         _
     }
 
-    modifier onlyGuard() {
+    modifier onlyOwner() {
         // Only owner is allowed to do this action.
         if (msg.sender != owner) {
             throw;
@@ -202,7 +202,7 @@ contract SingularDTVCrowdfunding {
     function changeBaseValue(uint valueInWei)
         external
         noEther
-        onlyGuard
+        onlyOwner
         returns (bool)
     {
         baseValue = valueInWei;
