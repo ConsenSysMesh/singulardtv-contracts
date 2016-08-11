@@ -222,6 +222,15 @@ contract SingularDTVCrowdfunding {
         return false;
     }
 
+    /// @dev returns the correct stage, even if a function with timedTransitions modifier has not yet been called successfully.
+    function getCurrentStage()
+        external 
+        timedTransitions
+        returns (Stages) 
+    {
+        return stage;
+    }
+
     /// @dev Setup function sets external contracts' addresses.
     /// @param singularDTVFundAddress Crowdfunding address.
     /// @param singularDTVTokenAddress Token address.
