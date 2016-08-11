@@ -185,6 +185,7 @@ contract SingularDTVCrowdfunding {
     function withdrawForWorkshop()
         external
         noEther
+        timedTransitions
         atStage(Stages.CrowdfundingEndedAndGoalReached)
         returns (bool)
     {
