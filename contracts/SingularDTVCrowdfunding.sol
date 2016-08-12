@@ -127,7 +127,7 @@ contract SingularDTVCrowdfunding {
         minInvestment
         returns (uint)
     {
-        uint tokenCount = msg.value / valuePerShare;
+        uint tokenCount = msg.value / valuePerShare; // Token count is rounded down. Investment should be multiples of valuePerShare. Otherwise change is sent back.
         uint investment = msg.value; // Ether invested by backer.
         if (singularDTVToken.totalSupply() + tokenCount > CAP) {
             // User wants to buy more shares than available. Set shares to possible maximum.
