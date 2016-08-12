@@ -9,6 +9,7 @@ from bitcoin import ecdsa_raw_sign
 # standard libraries
 from unittest import TestCase
 
+
 # Accounts
 GUARD = 0
 WS_1 = 1
@@ -103,16 +104,10 @@ class TestContract(TestCase):
         # 500000000 shares have been issued to early investors.
         self.assertEqual(self.token_contract.totalSupply(), 500000000)
         # Backer 1 starts funding, but doesn't send enough money to buy a share, transaction fails.
-        try:
-            self.crowdfunding_contract.fund(value=ETH_VALUE_PER_SHARE - 1, sender=keys[BACKER_1])
-        except TransactionFailed:
-            self.assertEqual(self.token_contract.balanceOf(accounts[BACKER_1]), 0)
+        self.assertRaises(TransactionFailed, self.crowdfunding_contract.fund, value=ETH_VALUE_PER_SHARE - 1, sender=keys[BACKER_1])
         # Backer 1 fails to buy some shares, because he sends Ether directly to the contract, which fails.
         share_count_b1 = 1000
-        try:
-            self.s.send(keys[BACKER_1], self.crowdfunding_contract.address, ETH_VALUE_PER_SHARE * share_count_b1)
-        except TransactionFailed:
-            self.assertEqual(self.token_contract.balanceOf(accounts[BACKER_1]), 0)
+        self.assertRaises(TransactionFailed, self.s.send, keys[BACKER_1], self.crowdfunding_contract.address, ETH_VALUE_PER_SHARE * share_count_b1)
         # Backer 1 is now successfully buying some shares by using the fund function.
         self.assertEqual(
             self.crowdfunding_contract.fund(value=ETH_VALUE_PER_SHARE * share_count_b1, sender=keys[BACKER_1]),
@@ -128,17 +123,11 @@ class TestContract(TestCase):
                          share_count_b2 - share_count_b1)
         # Backer 1 wants to buy more shares too, but the cap has been reached already
         self.assertEqual(self.token_contract.totalSupply(), MAX_TOKEN_COUNT)
-        try:
-            self.crowdfunding_contract.fund(value=ETH_VALUE_PER_SHARE, sender=keys[BACKER_1])
-        except TransactionFailed:
-            self.assertEqual(self.token_contract.balanceOf(accounts[BACKER_1]), share_count_b1)
+        self.assertRaises(TransactionFailed, self.crowdfunding_contract.fund, value=ETH_VALUE_PER_SHARE, sender=keys[BACKER_1])
         # Crowdfunding period ends
         self.s.block.timestamp += CROWDFUNDING_PERIOD
         # Backer 1 wants to withdraw his shares now, but fails, because the campaign ended successfully
-        try:
-            self.crowdfunding_contract.withdrawFunding(sender=keys[BACKER_1])
-        except TransactionFailed:
-            self.assertEqual(self.token_contract.balanceOf(accounts[BACKER_1]), share_count_b1)
+        self.assertRaises(TransactionFailed, self.crowdfunding_contract.withdrawFunding, sender=keys[BACKER_1])
         fund_balance = self.crowdfunding_contract.fundBalance()
         # Series A investor with address 0x0196b712a0459cbee711e7c1d34d2c85a9910379 has now 5M shares
         self.assertEqual(self.token_contract.balanceOf("0x0196b712a0459cbee711e7c1d34d2c85a9910379"), 5000000)
