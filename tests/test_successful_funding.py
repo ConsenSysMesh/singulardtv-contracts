@@ -100,7 +100,7 @@ class TestContract(TestCase):
         self.assertEqual(self.crowdfunding_contract.startDate(), self.s.block.timestamp)
         # Series A investor with address 0x0196b712a0459cbee711e7c1d34d2c85a9910379 has 5000000 shares
         self.assertEqual(self.token_contract.balanceOf("0x0196b712a0459cbee711e7c1d34d2c85a9910379"), 5000000)
-        # 500000000 shares have been issued.
+        # 500000000 shares have been issued to early investors.
         self.assertEqual(self.token_contract.totalSupply(), 500000000)
         # Backer 1 starts funding, but doesn't send enough money to buy a share, transaction fails.
         try:
@@ -121,6 +121,8 @@ class TestContract(TestCase):
         # Backer 1 has now share_count shares
         self.assertEqual(self.token_contract.balanceOf(accounts[BACKER_1]), share_count_b1)
         # Backer 2 invests too and wants to buy more shares than possible. He gets the maximum amount possible.
+        # Half of all tokens (500M) was assigned to early investors and backer 1 bought 1000 shares successfully.
+        # This is why there are less than 500M shares left, which can be bought.
         share_count_b2 = MAX_TOKEN_COUNT / 2
         self.assertEqual(self.crowdfunding_contract.fund(value=ETH_VALUE_PER_SHARE * share_count_b2, sender=keys[BACKER_2]),
                          share_count_b2 - share_count_b1)
