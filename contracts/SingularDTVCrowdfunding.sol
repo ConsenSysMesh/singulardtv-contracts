@@ -119,6 +119,21 @@ contract SingularDTVCrowdfunding {
         }
     }
 
+    /// @dev Can be triggered if an invariant fails.
+    function emergencyCall()
+        external
+        noEther
+        returns (bool)
+    {
+        if (fundBalance != this.balance) {
+            if (this.balance > 0 && !singularDTVFund.workshop().send(this.balance)) {
+                throw;
+            }
+            return true;
+        }
+        return false;
+    }
+
     /// @dev Allows user to fund the campaign if campaign is still going and cap not reached. Returns share count.
     function fund()
         external
