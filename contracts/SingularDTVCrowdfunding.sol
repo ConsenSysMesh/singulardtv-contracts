@@ -113,7 +113,7 @@ contract SingularDTVCrowdfunding {
      *  Contract functions
      */
     /// dev Validates invariants.
-    function checkInvariants() internal {
+    function checkInvariants() constant internal {
         if (fundBalance != this.balance) {
             throw;
         }
@@ -211,12 +211,22 @@ contract SingularDTVCrowdfunding {
     }
 
     /// @dev Returns if 2 years passed since beginning of crowdfunding.
-    function workshopWaited2Years() constant external returns (bool) {
+    function workshopWaited2Years()
+        constant
+        external
+        noEther
+        returns (bool)
+    {
         return now - startDate >= TOKEN_LOCKING_PERIOD;
     }
 
     /// @dev Returns if campaign ended successfully.
-    function campaignEndedSuccessfully() constant external returns (bool) {
+    function campaignEndedSuccessfully()
+        constant
+        external
+        noEther
+        returns (bool)
+    {
         if (stage == Stages.CrowdfundingEndedAndGoalReached) {
             return true;
         }
