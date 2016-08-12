@@ -235,9 +235,11 @@ contract SingularDTVCrowdfunding {
 
     /// @dev returns the correct stage, even if a function with timedTransitions modifier has not yet been called successfully.
     function getCurrentStage()
-        external 
+        constant
+        external
         timedTransitions
-        returns (Stages) 
+        noEther
+        returns (Stages)
     {
         return stage;
     }
