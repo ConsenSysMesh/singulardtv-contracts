@@ -86,19 +86,20 @@ contract SingularDTVCrowdfunding {
     }
 
     modifier timedTransitions() {
-        if (now - startDate >= 22 days) {
+        uint crowdfundDuration = now - startDate;
+        if (crowdfundDuration >= 22 days) {
             valuePerShare = baseValue * 5;
         }
-        else if (now - startDate >= 18 days) {
+        else if (crowdfundDuration >= 18 days) {
             valuePerShare = baseValue * 4;
         }
-        else if (now - startDate >= 14 days) {
+        else if (crowdfundDuration >= 14 days) {
             valuePerShare = baseValue * 3;
         }
-        else if (now - startDate >= 10 days) {
+        else if (crowdfundDuration >= 10 days) {
             valuePerShare = baseValue * 2;
         }
-        if (now - startDate >= CROWDFUNDING_PERIOD) {
+        if (crowdfundDuration >= CROWDFUNDING_PERIOD) {
             if (stage == Stages.CrowdfundingGoingAndGoalNotReached) {
                 stage = Stages.CrowdfundingEndedAndGoalNotReached;
             }
