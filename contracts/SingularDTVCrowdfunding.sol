@@ -248,9 +248,10 @@ contract SingularDTVCrowdfunding {
         return false;
     }
 
-    /// @dev returns the correct stage, even if a function with timedTransitions modifier has not yet been called successfully.
-    function getCurrentStage()
-        constant
+    // updateStage allows calls to receive correct stage. It can be used for transactions but is not part of the regular crowdfunding routine.
+    // It is not marked as constant because timedTransitions modifier is altering state and constant is not yet enforced by solc.
+    /// @dev returns correct stage, even if a function with timedTransitions modifier has not yet been called successfully.
+    function updateStage()
         external
         timedTransitions
         noEther
