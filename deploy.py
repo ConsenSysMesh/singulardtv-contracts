@@ -62,6 +62,19 @@ def do_transaction(json_rpc, coinbase, contract, name, params, gas, gas_price):
     print 'Transaction {} for contract {} completed.'.format(name, contract)
 
 
+def do_assertion(json_rpc, contract, name, params, return_value):
+    contract_address = addresses[contract] if contract in addresses else contract
+    return_value = addresses[return_value] if return_value in addresses else return_value
+    contract_abi = abis[contract]
+    translator = ContractTranslator(contract_abi)
+    data = translator.encode(name, [addresses[param] if param in addresses else param for param in params]).encode("hex")
+    print 'Try to assert return value of {} in contract {}.'.format(name, contract)
+    bc_return_val = json_rpc.eth_call(to_address=contract_address, data=data)["result"]
+    result_decoded = translator.decode(name, bc_return_val[2:].decode("hex"))
+    result_decoded = result_decoded if len(result_decoded) > 1 else result_decoded[0]
+    assert result_decoded == return_value[2:]
+
+
 @click.command()
 @click.option('-f', help='File with instructions.')
 @click.option('-host', default="localhost", help='Ethereum server host.')
@@ -99,6 +112,14 @@ def setup(f, host, port, add_dev_code, contract_dir, gas, gas_price):
                 instruction["params"],
                 int(gas),
                 int(gas_price)
+            )
+        elif instruction["type"] == "assertion":
+            do_assertion(
+                json_rpc,
+                instruction["contract"],
+                instruction["name"],
+                instruction["params"],
+                instruction["return"]
             )
     for contract_name, contract_address in addresses.iteritems():
         print 'Contract {} was created at address {}.'.format(contract_name, contract_address)

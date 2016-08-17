@@ -37,6 +37,20 @@
         ]
     },
     {
+        "type": "assertion",
+        "contract": "SingularDTVFund",
+        "name": "singularDTVToken",
+        "params": [],
+        "return": "SingularDTVToken"
+    },
+    {
+        "type": "assertion",
+        "contract": "SingularDTVFund",
+        "name": "singularDTVCrowdfunding",
+        "params": [],
+        "return": "SingularDTVCrowdfunding"
+    },
+    {
         "type": "transaction",
         "contract": "SingularDTVCrowdfunding",
         "name": "setup",
@@ -44,5 +58,19 @@
             "SingularDTVFund",
             "SingularDTVToken"
         ]
+    },
+    {
+        "type": "assertion",
+        "contract": "SingularDTVCrowdfunding",
+        "name": "singularDTVFund",
+        "params": [],
+        "return": "SingularDTVFund"
+    },
+    {
+        "type": "assertion",
+        "contract": "SingularDTVCrowdfunding",
+        "name": "singularDTVToken",
+        "params": [],
+        "return": "SingularDTVToken"
     }
 ]
