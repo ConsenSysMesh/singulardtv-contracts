@@ -279,7 +279,7 @@ contract SingularDTVCrowdfunding {
     }
 
     /// @dev Contract constructor function sets owner and start date.
-    function SingularDTVCrowdfunding() {
+    function SingularDTVCrowdfunding() noEther {
         // Set owner address
         owner = msg.sender;
         // Set start-date of crowdfunding

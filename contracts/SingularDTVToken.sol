@@ -74,8 +74,8 @@ contract SingularDTVToken is StandardToken {
         returns (bool)
     {
         // Both parties withdraw their revenue first
-        singularDTVFund.withdrawRevenueFor(msg.sender);
-        singularDTVFund.withdrawRevenueFor(to);
+        singularDTVFund.softWithdrawRevenueFor(msg.sender);
+        singularDTVFund.softWithdrawRevenueFor(to);
         return super.transfer(to, value);
     }
 
@@ -89,13 +89,13 @@ contract SingularDTVToken is StandardToken {
         returns (bool)
     {
         // Both parties withdraw their revenue first
-        singularDTVFund.withdrawRevenueFor(from);
-        singularDTVFund.withdrawRevenueFor(to);
+        singularDTVFund.softWithdrawRevenueFor(from);
+        singularDTVFund.softWithdrawRevenueFor(to);
         return super.transferFrom(from, to, value);
     }
 
     /// @dev Contract constructor function sets initial token balances.
-    function SingularDTVToken() {
+    function SingularDTVToken() noEther {
         // Set initial share distribution
         balances[singularDTVFund.workshop()] = 400000000; // ~400M
         // Series A investors
