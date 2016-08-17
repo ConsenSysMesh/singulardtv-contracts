@@ -105,7 +105,7 @@ contract SingularDTVFund {
         onlyOwner
         returns (bool)
     {
-        if (address(singularDTVCrowdfunding) == 0 || address(singularDTVToken) == 0) {
+        if (address(singularDTVCrowdfunding) == 0 && address(singularDTVToken) == 0) {
             singularDTVCrowdfunding = SingularDTVCrowdfunding(singularDTVCrowdfundingAddress);
             singularDTVToken = SingularDTVToken(singularDTVTokenAddress);
             return true;

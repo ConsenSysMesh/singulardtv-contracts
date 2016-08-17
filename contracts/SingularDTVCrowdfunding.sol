@@ -270,7 +270,7 @@ contract SingularDTVCrowdfunding {
         noEther
         returns (bool)
     {
-        if (address(singularDTVFund) == 0 || address(singularDTVToken) == 0) {
+        if (address(singularDTVFund) == 0 && address(singularDTVToken) == 0) {
             singularDTVFund = SingularDTVFund(singularDTVFundAddress);
             singularDTVToken = SingularDTVToken(singularDTVTokenAddress);
             return true;
