@@ -142,23 +142,24 @@ class TestContract(TestCase):
         self.assertTrue(self.fund_contract.depositRevenue(value=revenue, sender=keys[WS_1]))
         self.assertEqual(self.fund_contract.totalRevenue(), revenue)
         # WS withdraws revenue share
-        withdraw_data = self.fund_contract.translator.encode("withdrawRevenueFor", [self.mist_wallet_contract.address])
+        withdraw_data = self.fund_contract.translator.encode("withdrawRevenue", ())
         revenue_share = revenue * 400000000 / MAX_TOKEN_COUNT
         wallet_balance = self.s.block.get_balance(self.mist_wallet_contract.address)
         self.mist_wallet_contract.execute(self.fund_contract.address, 0, withdraw_data, value=0)
         # The wallet's balance increased.
         self.assertEqual(self.s.block.get_balance(self.mist_wallet_contract.address), wallet_balance + revenue_share)
+        # Backer 1 transfer shares to new backer 3 and backer 1's revenue share is credited to owed balance.
+        self.assertTrue(self.token_contract.transfer(accounts[BACKER_3], share_count_b1, sender=keys[BACKER_1]))
         # Backer 1 withdraws his revenue for himself
         revenue_share = revenue * share_count_b1 / MAX_TOKEN_COUNT
-        self.assertEqual(self.fund_contract.withdrawRevenueFor(accounts[BACKER_1], sender=keys[BACKER_1]), revenue_share)
+        self.assertEqual(self.fund_contract.owed(accounts[BACKER_1]), revenue_share)
+        self.assertEqual(self.fund_contract.withdrawRevenue(sender=keys[BACKER_1]), revenue_share)
         # The next time backer 1 wants to withdraw his revenue share, he gets nothing as no new revenue was generated.
-        self.assertEqual(self.fund_contract.withdrawRevenueFor(accounts[BACKER_1], sender=keys[BACKER_1]), 0)
-        # Backer 1 transfer shares to new backer 3
-        self.assertTrue(self.token_contract.transfer(accounts[BACKER_3], share_count_b1, sender=keys[BACKER_1]))
+        self.assertEqual(self.fund_contract.withdrawRevenue(sender=keys[BACKER_1]), 0)
         # Backer 3 tries to withdraw his revenue share for his new shares.
         # Backer 3 won't get anything, because no new revenue has been generated after transfer.
-        self.assertEqual(self.fund_contract.withdrawRevenueFor(accounts[BACKER_3], sender=keys[BACKER_3]), 0)
+        self.assertEqual(self.fund_contract.withdrawRevenue(sender=keys[BACKER_3]), 0)
         # Backer 2 withdraws revenue share
         share_count_b2 = self.token_contract.balanceOf(accounts[BACKER_2])
         revenue_share = revenue * share_count_b2 / MAX_TOKEN_COUNT
-        self.assertEqual(self.fund_contract.withdrawRevenueFor(accounts[BACKER_2], sender=keys[BACKER_2]), revenue_share)
+        self.assertEqual(self.fund_contract.withdrawRevenue(sender=keys[BACKER_2]), revenue_share)

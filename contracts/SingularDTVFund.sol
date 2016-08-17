@@ -22,6 +22,9 @@ contract SingularDTVFund {
     // User's address => Revenue at time of withdraw
     mapping (address => uint) public revenueAtTimeOfWithdraw;
 
+    // User's address => Revenue which can be withdrawn
+    mapping (address => uint) public owed;
+
     /*
      *  Modifiers
      */
@@ -62,16 +65,35 @@ contract SingularDTVFund {
 
     /// @dev Withdraws revenue share for user. Returns revenue share.
     /// @param forAddress Shareholder's address.
-    function withdrawRevenueFor(address forAddress)
+    function calcRevenue(address forAddress) internal returns (uint) {
+        return singularDTVToken.balanceOf(forAddress) * (totalRevenue - revenueAtTimeOfWithdraw[forAddress]) / singularDTVToken.totalSupply();
+    }
+
+    /// @dev Withdraws revenue share for user. Returns revenue share.
+    function withdrawRevenue()
         external
         noEther
         returns (uint)
     {
-        uint value = singularDTVToken.balanceOf(forAddress) * (totalRevenue - revenueAtTimeOfWithdraw[forAddress]) / singularDTVToken.totalSupply();
-        revenueAtTimeOfWithdraw[forAddress] = totalRevenue;
-        if (value > 0 && !forAddress.send(value)) {
+        uint value = calcRevenue(msg.sender) + owed[msg.sender];
+        revenueAtTimeOfWithdraw[msg.sender] = totalRevenue;
+        owed[msg.sender] = 0;
+        if (value > 0 && !msg.sender.send(value)) {
             throw;
         }
+        return value;
+    }
+
+    /// @dev Credits revenue share to owed balance.
+    /// @param forAddress Shareholder's address.
+    function softWithdrawRevenueFor(address forAddress)
+        external
+        noEther
+        returns (uint)
+    {
+        uint value = calcRevenue(forAddress);
+        revenueAtTimeOfWithdraw[forAddress] = totalRevenue;
+        owed[forAddress] += value;
         return value;
     }
 
@@ -92,7 +114,7 @@ contract SingularDTVFund {
     }
 
     /// @dev Contract constructor function sets guard and initial token balances.
-    function SingularDTVFund() {
+    function SingularDTVFund() noEther {
         // Set owner address
         owner = msg.sender;
     }
