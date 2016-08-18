@@ -3,7 +3,7 @@ from abstract_test import *
 
 class TestContract(AbstractTestContract):
     """
-    run test with python -m unittest contracts.tests.test_buy_and_sell_shares
+    run test with python -m unittest tests.test_successful_funding
     """
 
     def __init__(self, *args, **kwargs):
@@ -43,7 +43,7 @@ class TestContract(AbstractTestContract):
         self.assertRaises(TransactionFailed, self.crowdfunding_contract.fund, value=ETH_VALUE_PER_SHARE, sender=keys[BACKER_1])
         # Crowdfunding period ends
         self.s.block.timestamp += CROWDFUNDING_PERIOD
-        # Backer 1 wants to withdraw his shares now, but fails, because the campaign ended successfully
+        # Backer 1 wants to withdraw his investment now, but fails, because the campaign ended successfully
         self.assertRaises(TransactionFailed, self.crowdfunding_contract.withdrawFunding, sender=keys[BACKER_1])
         fund_balance = self.crowdfunding_contract.fundBalance()
         # Series A investor with address 0x0196b712a0459cbee711e7c1d34d2c85a9910379 has now 5M shares

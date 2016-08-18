@@ -147,7 +147,6 @@ contract SingularDTVCrowdfunding {
         if (singularDTVToken.totalSupply() + tokenCount > CAP) {
             // User wants to buy more shares than available. Set shares to possible maximum.
             tokenCount = CAP - singularDTVToken.totalSupply();
-
         }
         uint investment = tokenCount * valuePerShare; // Ether invested by backer.
         // Send change back to user.

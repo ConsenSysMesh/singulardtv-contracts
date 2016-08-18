@@ -11,9 +11,10 @@ from unittest import TestCase
 
 
 HOMESTEAD_BLOCK = 1150000
+DAY = 60*60*24
 
 # Accounts
-GUARD = 0
+OWNER = 0
 WS_1 = 1
 WS_2 = 2
 WS_3 = 3
@@ -37,7 +38,7 @@ ETH_TARGET = 10**18 * 100000  # 100.000 ETH
 
 class AbstractTestContract(TestCase):
     """
-    run test with python -m unittest tests.test_successful_funding
+    run test with python -m unittest discover tests
     """
 
     HOMESTEAD_BLOCK = 1150000
