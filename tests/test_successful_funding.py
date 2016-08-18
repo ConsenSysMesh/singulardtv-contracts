@@ -71,8 +71,7 @@ class TestContract(TestCase):
         # Crowdfunding contract is create by GUARD
         self.crowdfunding_contract = self.s.abi_contract(
             self.pp.process('SingularDTVCrowdfunding.sol', add_dev_code=True, contract_dir=contract_dir),
-            language='solidity',
-            sender=keys[GUARD]
+            language='solidity'
         )
         self.token_contract = self.s.abi_contract(
             self.pp.process('SingularDTVToken.sol', add_dev_code=True, contract_dir=contract_dir, addresses={
@@ -97,6 +96,9 @@ class TestContract(TestCase):
         return "0x{}".format(contract.address.encode('hex'))
 
     def test(self):
+        # Setups cannot be called twice
+        self.assertFalse(self.crowdfunding_contract.setup(0, 0))
+        self.assertFalse(self.fund_contract.setup(0, 0))
         # Crowdfunding has started and startDate has been set.
         self.assertEqual(self.crowdfunding_contract.startDate(), self.s.block.timestamp)
         # Series A investor with address 0x0196b712a0459cbee711e7c1d34d2c85a9910379 has 5000000 shares
