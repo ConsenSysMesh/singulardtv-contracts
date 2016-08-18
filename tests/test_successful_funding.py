@@ -150,7 +150,9 @@ class TestContract(TestCase):
         # The wallet's balance increased.
         self.assertEqual(self.s.block.get_balance(self.mist_wallet_contract.address), wallet_balance + revenue_share)
         # Backer 1 transfer shares to new backer 3 and backer 1's revenue share is credited to owed balance.
-        self.assertTrue(self.token_contract.transfer(accounts[BACKER_3], share_count_b1, sender=keys[BACKER_1]))
+        self.assertTrue(self.token_contract.transfer(accounts[BACKER_3], share_count_b1/2, sender=keys[BACKER_1]))
+        self.assertTrue(self.token_contract.approve(accounts[BACKER_3], share_count_b1/2, sender=keys[BACKER_1]))
+        self.assertTrue(self.token_contract.transferFrom(accounts[BACKER_1], accounts[BACKER_3], share_count_b1/2, sender=keys[BACKER_3]))
         # Backer 1 withdraws his revenue for himself
         revenue_share = revenue * share_count_b1 / MAX_TOKEN_COUNT
         self.assertEqual(self.fund_contract.owed(accounts[BACKER_1]), revenue_share)
