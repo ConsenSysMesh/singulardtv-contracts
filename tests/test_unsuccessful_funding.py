@@ -22,7 +22,7 @@ class TestContract(AbstractTestContract):
         # Backer 2 is buying some shares by using the fund function. Price increased because time passed.
         self.s.block.timestamp += DAY * 10
         share_count_b2 = 1000
-        investment_2 = ETH_VALUE_PER_SHARE * 2 * share_count_b2
+        investment_2 = ETH_VALUE_PER_SHARE * 1125 * share_count_b2 / 1000
         self.assertEqual(
             self.crowdfunding_contract.fund(value=investment_2 + 1, sender=keys[BACKER_2]),
             share_count_b2
@@ -34,7 +34,7 @@ class TestContract(AbstractTestContract):
         # Backer 2 is buying some more shares later. Price increased again because more time passed.
         self.s.block.timestamp += DAY * 4
         share_count_b2_2 = 1000
-        investment_3 = ETH_VALUE_PER_SHARE * 2 * 3 * share_count_b2
+        investment_3 = ETH_VALUE_PER_SHARE * 2 * 1250 * share_count_b2 / 1000
         self.assertEqual(
             self.crowdfunding_contract.fund(value=investment_3, sender=keys[BACKER_2]),
             share_count_b2_2
