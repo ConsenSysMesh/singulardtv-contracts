@@ -15,10 +15,10 @@ contract SingularDTVCrowdfunding {
     /*
      *  Constants
      */
-    uint constant public CAP = 1000000000; // 1B tokens is the maximum amount of tokens
-    uint constant public CROWDFUNDING_PERIOD = 4 weeks; // 1 month
-    uint constant public TOKEN_LOCKING_PERIOD = 2 years; // 2 years
-    uint constant public TOKEN_TARGET = 534000000; // 34M Tokens more than the initial 500M, around 42,500 ETH
+    uint constant public CAP = 520000000; // 1B tokens is the maximum amount of tokens
+    uint constant public CROWDFUNDING_PERIOD = 1 weeks; // 1 month
+    uint constant public TOKEN_LOCKING_PERIOD = 10 days; // 2 years
+    uint constant public TOKEN_TARGET = 510000000; // 34M Tokens more than the initial 500M, around 42,500 ETH
 
     /*
      *  Enums
@@ -87,16 +87,16 @@ contract SingularDTVCrowdfunding {
 
     modifier timedTransitions() {
         uint crowdfundDuration = now - startDate;
-        if (crowdfundDuration >= 22 days) {
+        if (crowdfundDuration >= 5 days) {
             valuePerShare = baseValue * 1500 / 1000;
         }
-        else if (crowdfundDuration >= 18 days) {
+        else if (crowdfundDuration >= 4 days) {
             valuePerShare = baseValue * 1375 / 1000;
         }
-        else if (crowdfundDuration >= 14 days) {
+        else if (crowdfundDuration >= 3 days) {
             valuePerShare = baseValue * 1250 / 1000;
         }
-        else if (crowdfundDuration >= 10 days) {
+        else if (crowdfundDuration >= 2 days) {
             valuePerShare = baseValue * 1125 / 1000;
         }
         if (crowdfundDuration >= CROWDFUNDING_PERIOD) {
