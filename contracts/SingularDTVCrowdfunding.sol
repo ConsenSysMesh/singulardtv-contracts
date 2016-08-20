@@ -15,7 +15,7 @@ contract SingularDTVCrowdfunding {
     /*
      *  Constants
      */
-    uint constant public CAP = 520000000; // 1B tokens is the maximum amount of tokens
+    uint constant public CAP = 600000000; // 1B tokens is the maximum amount of tokens
     uint constant public CROWDFUNDING_PERIOD = 1 weeks; // 1 month
     uint constant public TOKEN_LOCKING_PERIOD = 10 days; // 2 years
     uint constant public TOKEN_TARGET = 510000000; // 34M Tokens more than the initial 500M, around 42,500 ETH
