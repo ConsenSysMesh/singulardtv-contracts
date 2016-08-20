@@ -1,10 +1,13 @@
 from ethjsonrpc import EthJsonRpc
 from ethereum.tester import languages
 from ethereum.abi import ContractTranslator
+from ethereum.transactions import Transaction
+from ethereum.utils import privtoaddr
 from preprocessor import PreProcessor
 import click
 import time
 import json
+import rlp
 
 
 addresses = {}
@@ -18,7 +21,7 @@ def wait_for_transaction_receipt(json_rpc, transaction_hash):
         time.sleep(5)
 
 
-def deploy_code(json_rpc, coinbase, file_path, constructor_params, contract_addresses, add_dev_code, contract_dir, gas, gas_price):
+def deploy_code(json_rpc, coinbase, file_path, constructor_params, contract_addresses, add_dev_code, contract_dir, gas, gas_price, private_key):
     if file_path not in addresses.keys():
         if contract_addresses:
             a_copy = addresses.copy()
@@ -39,7 +42,15 @@ def deploy_code(json_rpc, coinbase, file_path, constructor_params, contract_addr
             translator = ContractTranslator(abi)
             compiled_code += translator.encode_constructor_arguments(constructor_params).encode("hex")
         print 'Try to create contract with length {} based on code in file: {}'.format(len(compiled_code), file_path)
-        transaction_hash = json_rpc.eth_sendTransaction(coinbase, data=compiled_code, gas=gas, gas_price=gas_price)["result"]
+        if private_key:
+            address = privtoaddr(private_key.decode('hex'))
+            nonce = int(json_rpc.eth_getTransactionCount('0x' + address.encode('hex'))["result"][2:], 16)
+            tx = Transaction(nonce, gas_price, gas, '', 0, compiled_code.decode('hex'))
+            tx.sign(private_key.decode('hex'))
+            raw_tx = rlp.encode(tx).encode('hex')
+            transaction_hash = json_rpc.eth_sendRawTransaction("0x" + raw_tx)["result"]
+        else:
+            transaction_hash = json_rpc.eth_sendTransaction(coinbase, data=compiled_code, gas=gas, gas_price=gas_price)["result"]
         wait_for_transaction_receipt(json_rpc, transaction_hash)
         contract_address = json_rpc.eth_getTransactionReceipt(transaction_hash)["result"]["contractAddress"]
         if json_rpc.eth_getCode(contract_address)["result"] == "0x":
@@ -51,13 +62,21 @@ def deploy_code(json_rpc, coinbase, file_path, constructor_params, contract_addr
         print 'Contract {} was created at address {}.'.format(file_path, contract_address)
 
 
-def do_transaction(json_rpc, coinbase, contract, name, params, gas, gas_price):
+def do_transaction(json_rpc, coinbase, contract, name, params, gas, gas_price, private_key):
     contract_address = addresses[contract] if contract in addresses else contract
     contract_abi = abis[contract]
     translator = ContractTranslator(contract_abi)
     data = translator.encode(name, [addresses[param] if param in addresses else param for param in params]).encode("hex")
     print 'Try to send {} transaction to contract {}.'.format(name, contract)
-    transaction_hash = json_rpc.eth_sendTransaction(coinbase, to_address=contract_address, data=data, gas=gas, gas_price=gas_price)["result"]
+    if private_key:
+        address = privtoaddr(private_key.decode('hex'))
+        nonce = int(json_rpc.eth_getTransactionCount('0x' + address.encode('hex'))["result"][2:], 16)
+        tx = Transaction(nonce, gas_price, gas, contract_address, 0, data.decode('hex'))
+        tx.sign(private_key.decode('hex'))
+        raw_tx = rlp.encode(tx).encode('hex')
+        transaction_hash = json_rpc.eth_sendRawTransaction("0x" + raw_tx)["result"]
+    else:
+        transaction_hash = json_rpc.eth_sendTransaction(coinbase, to_address=contract_address, data=data, gas=gas, gas_price=gas_price)["result"]
     wait_for_transaction_receipt(json_rpc, transaction_hash)
     print 'Transaction {} for contract {} completed.'.format(name, contract)
 
@@ -83,7 +102,8 @@ def do_assertion(json_rpc, contract, name, params, return_value):
 @click.option('-contract_dir', default='contracts/', help='Import directory.')
 @click.option('-gas', default='4712388', help='Transaction gas.')
 @click.option('-gas_price', default='50000000000', help='Transaction gas price.')
-def setup(f, host, port, add_dev_code, contract_dir, gas, gas_price):
+@click.option('-private_key', help='Private key as hex to sign transactions.')
+def setup(f, host, port, add_dev_code, contract_dir, gas, gas_price, private_key):
     with open(f) as data_file:
         instructions = json.load(data_file)
     json_rpc = EthJsonRpc(host, port)
@@ -101,7 +121,8 @@ def setup(f, host, port, add_dev_code, contract_dir, gas, gas_price):
                 add_dev_code == "true",
                 contract_dir,
                 int(gas),
-                int(gas_price)
+                int(gas_price),
+                private_key
             )
         elif instruction["type"] == "transaction":
             do_transaction(
@@ -111,7 +132,8 @@ def setup(f, host, port, add_dev_code, contract_dir, gas, gas_price):
                 instruction["name"],
                 instruction["params"],
                 int(gas),
-                int(gas_price)
+                int(gas_price),
+                private_key
             )
         elif instruction["type"] == "assertion":
             do_assertion(
