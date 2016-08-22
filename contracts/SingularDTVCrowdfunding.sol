@@ -115,7 +115,7 @@ contract SingularDTVCrowdfunding {
      */
     /// dev Validates invariants.
     function checkInvariants() constant internal {
-        if (fundBalance != this.balance) {
+        if (fundBalance > this.balance) {
             throw;
         }
     }
@@ -126,7 +126,7 @@ contract SingularDTVCrowdfunding {
         noEther
         returns (bool)
     {
-        if (fundBalance != this.balance) {
+        if (fundBalance > this.balance) {
             if (this.balance > 0 && !singularDTVFund.workshop().send(this.balance)) {
                 throw;
             }
