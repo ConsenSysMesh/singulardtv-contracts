@@ -1,18 +1,9 @@
 [
     {
         "type": "deployment",
-        "file": "MistWallet.sol",
-        "constructorParams": [
-            ["0xf7f139ea1fe65435e984a9171e4211510d0195e6"],
-            0,
-            1000000000000000
-        ]
-    },
-    {
-        "type": "deployment",
         "file": "SingularDTVFund.sol",
         "addresses": {
-            "MistWallet": "0xf7f139ea1fe65435e984a9171e4211510d0195e6"
+            "MistWallet": "0x4cb910B6217c56104033736E79305871f513e788"
         }
     },
     {
