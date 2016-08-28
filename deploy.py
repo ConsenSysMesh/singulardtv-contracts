@@ -1,5 +1,5 @@
 from ethjsonrpc import EthJsonRpc
-from ethereum.tester import languages
+from ethereum.tester import languages, state
 from ethereum.abi import ContractTranslator
 from ethereum.transactions import Transaction
 from ethereum.utils import privtoaddr
@@ -13,6 +13,7 @@ import rlp
 addresses = {}
 abis = {}
 pp = PreProcessor()
+s = state()
 
 
 def wait_for_transaction_receipt(json_rpc, transaction_hash):
@@ -53,9 +54,12 @@ def deploy_code(json_rpc, coinbase, file_path, constructor_params, contract_addr
             transaction_hash = json_rpc.eth_sendTransaction(coinbase, data=compiled_code, gas=gas, gas_price=gas_price)["result"]
         wait_for_transaction_receipt(json_rpc, transaction_hash)
         contract_address = json_rpc.eth_getTransactionReceipt(transaction_hash)["result"]["contractAddress"]
-        if json_rpc.eth_getCode(contract_address)["result"] == "0x":
+        locally_deployed_code_address = s.evm(compiled_code.decode("hex")).encode("hex")
+        locally_deployed_code = s.block.get_code(locally_deployed_code_address).encode("hex")
+        deployed_code = json_rpc.eth_getCode(contract_address)["result"]
+        if deployed_code != "0x" + locally_deployed_code:
             print 'Deploy of {} failed. Retry!'.format(file_path)
-            deploy_code(json_rpc, coinbase, file_path, add_dev_code, contract_dir, gas, gas_price)
+            deploy_code(json_rpc, coinbase, file_path, constructor_params, contract_addresses, add_dev_code, contract_dir, gas, gas_price, private_key)
         contract_name = file_path.split("/")[-1].split(".")[0]
         addresses[contract_name] = contract_address
         abis[contract_name] = abi

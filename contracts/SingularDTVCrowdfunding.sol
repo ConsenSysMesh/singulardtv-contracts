@@ -98,7 +98,8 @@ contract SingularDTVCrowdfunding {
         }
         else if (crowdfundDuration >= 10 days) {
             valuePerShare = baseValue * 1125 / 1000;
-        } else {
+        }
+        else {
             valuePerShare = baseValue;
         }
         if (crowdfundDuration >= CROWDFUNDING_PERIOD) {
