@@ -112,7 +112,10 @@ def setup(f, host, port, add_dev_code, contract_dir, gas, gas_price, private_key
         instructions = json.load(data_file)
     json_rpc = EthJsonRpc(host, port)
     coinbase = json_rpc.eth_coinbase()["result"]
-    print "Your coinbase: {}".format(coinbase)
+    if private_key:
+        print "Your address for your private key: {}".format(privtoaddr(private_key.decode('hex')).encode('hex'))
+    else:
+        print "Your coinbase: {}".format(coinbase)
     for instruction in instructions:
         print 'Your balance: {} Wei'.format(int(json_rpc.eth_getBalance(coinbase)['result'], 16))
         if instruction["type"] == "deployment":
