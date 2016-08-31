@@ -17,7 +17,7 @@ contract SingularDTVCrowdfunding {
      */
     uint constant public CAP = 1000000000; // 1B tokens is the maximum amount of tokens
     uint constant public CROWDFUNDING_PERIOD = 4 weeks; // 1 month
-    uint constant public TOKEN_LOCKING_PERIOD = 2 years; // 2 years
+    uint constant public TOKEN_LOCKING_PERIOD = 1 years; // 1 years
     uint constant public TOKEN_TARGET = 534000000; // 34M Tokens more than the initial 500M, around 42,500 ETH
 
     /*
@@ -228,8 +228,8 @@ contract SingularDTVCrowdfunding {
         return true;
     }
 
-    /// @dev Returns if 2 years passed since beginning of crowdfunding.
-    function workshopWaited2Years()
+    /// @dev Returns if 1 year passed since beginning of crowdfunding.
+    function oneYearPassed()
         constant
         external
         noEther
