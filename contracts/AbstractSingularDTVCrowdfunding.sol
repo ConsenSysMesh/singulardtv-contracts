@@ -1,5 +1,5 @@
 contract SingularDTVCrowdfunding {
-    function oneYearPassed() returns (bool);
+    function twoYearsPassed() returns (bool);
     function startDate() returns (uint);
     function CROWDFUNDING_PERIOD() returns (uint);
     function TOKEN_TARGET() returns (uint);

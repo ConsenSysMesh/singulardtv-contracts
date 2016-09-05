@@ -82,7 +82,7 @@ class TestContract(AbstractTestContract):
         share_count_b2 = self.token_contract.balanceOf(accounts[BACKER_2])
         revenue_share = revenue * share_count_b2 / MAX_TOKEN_COUNT
         self.assertEqual(self.fund_contract.withdrawRevenue(sender=keys[BACKER_2]), revenue_share)
-        # Workshop wants to transfer shares but fails because 1 year have not passed yet
+        # Workshop wants to transfer shares but fails because 2 years have not passed yet
         transfer_data = self.token_contract.translator.encode("transfer", (accounts[WS_1], 1000000))
         self.mist_wallet_contract.execute(self.token_contract.address, 0, transfer_data, value=0)
         self.assertEqual(self.token_contract.balanceOf(self.mist_wallet_contract.address), 400000000)
