@@ -49,9 +49,20 @@ def deploy_code(json_rpc, coinbase, file_path, constructor_params, contract_addr
             tx = Transaction(nonce, gas_price, gas, '', 0, compiled_code.decode('hex'))
             tx.sign(private_key.decode('hex'))
             raw_tx = rlp.encode(tx).encode('hex')
-            transaction_hash = json_rpc.eth_sendRawTransaction("0x" + raw_tx)["result"]
+            tx_response = json_rpc.eth_sendRawTransaction("0x" + raw_tx)
+            # transaction_hash = json_rpc.eth_sendRawTransaction("0x" + raw_tx)["result"]
+            while "error" in tx_response:
+                print 'Deploy failed with error {}. Retry!'.format(tx_response['error'])
+                time.sleep(5)
+                tx_response = json_rpc.eth_sendRawTransaction("0x" + raw_tx)
         else:
-            transaction_hash = json_rpc.eth_sendTransaction(coinbase, data=compiled_code, gas=gas, gas_price=gas_price)["result"]
+            tx_response = json_rpc.eth_sendTransaction(coinbase, data=compiled_code, gas=gas, gas_price=gas_price)
+            # transaction_hash = json_rpc.eth_sendTransaction(coinbase, data=compiled_code, gas=gas, gas_price=gas_price)["result"]
+            while "error" in tx_response:
+                print 'Deploy failed with error {}. Retry!'.format(tx_response['error'])
+                time.sleep(5)
+                tx_response = json_rpc.eth_sendTransaction(coinbase, data=compiled_code, gas=gas, gas_price=gas_price)
+        transaction_hash = tx_response['result']
         wait_for_transaction_receipt(json_rpc, transaction_hash)
         contract_address = json_rpc.eth_getTransactionReceipt(transaction_hash)["result"]["contractAddress"]
         locally_deployed_code_address = s.evm(compiled_code.decode("hex")).encode("hex")
@@ -78,9 +89,20 @@ def do_transaction(json_rpc, coinbase, contract, name, params, gas, gas_price, p
         tx = Transaction(nonce, gas_price, gas, contract_address, 0, data.decode('hex'))
         tx.sign(private_key.decode('hex'))
         raw_tx = rlp.encode(tx).encode('hex')
-        transaction_hash = json_rpc.eth_sendRawTransaction("0x" + raw_tx)["result"]
+        # transaction_hash = json_rpc.eth_sendRawTransaction("0x" + raw_tx)["result"]
+        tx_response = json_rpc.eth_sendRawTransaction("0x" + raw_tx)
+        while 'error' in tx_response:
+            print 'Transaction failed with error {}. Retry!'.format(tx_response['error'])
+            time.sleep(5)
+            tx_response = json_rpc.eth_sendRawTransaction("0x" + raw_tx)
     else:
-        transaction_hash = json_rpc.eth_sendTransaction(coinbase, to_address=contract_address, data=data, gas=gas, gas_price=gas_price)["result"]
+        # transaction_hash = json_rpc.eth_sendTransaction(coinbase, to_address=contract_address, data=data, gas=gas, gas_price=gas_price)["result"]
+        tx_response = json_rpc.eth_sendTransaction(coinbase, to_address=contract_address, data=data, gas=gas, gas_price=gas_price)
+        while 'error' in tx_response:
+            print 'Transaction failed with error {}. Retry!'.format(tx_response['error'])
+            time.sleep(5)
+            tx_response = json_rpc.eth_sendTransaction(coinbase, to_address=contract_address, data=data, gas=gas, gas_price=gas_price)
+    transaction_hash = tx_response['result']
     wait_for_transaction_receipt(json_rpc, transaction_hash)
     print 'Transaction {} for contract {} completed.'.format(name, contract)
 
