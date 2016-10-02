@@ -48,7 +48,8 @@ class AbstractTestContract(TestCase):
         self.pp = PreProcessor()
         self.s = t.state()
         self.s.block.number = HOMESTEAD_BLOCK
-        t.gas_limit = 4712388
+        # t.gas_limit = 4712388
+        t.gas_limit = 2000000
 
     def setUp(self):
         contract_dir = 'contracts/'
