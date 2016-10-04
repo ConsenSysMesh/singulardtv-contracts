@@ -31,7 +31,7 @@ contract SingularDTVToken is StandardToken {
     }
 
     modifier workshopWaitedTwoYears() {
-        // Workshop can only transfer shares after a two years period.
+        // Workshop can only transfer tokens after a two years period.
         if (msg.sender == singularDTVFund.workshop() && !singularDTVCrowdfunding.twoYearsPassed()) {
             throw;
         }
@@ -96,9 +96,9 @@ contract SingularDTVToken is StandardToken {
 
     /// @dev Contract constructor function sets initial token balances.
     function SingularDTVToken() noEther {
-        // Set initial share distribution
+        // Set token creation for workshop
         balances[singularDTVFund.workshop()] = 400000000; // ~400M
-        // Series A investors
+        // Set token creation for core
         balances[0x0196b712a0459cbee711e7c1d34d2c85a9910379] = 5000000;
         balances[0x0f94dc84ce0f5fa2a8cc8d27a6969e25b5a39273] = 200000;
         balances[0x122b7eb5f629d806c8adb0baa0560266abb3ec80] = 450000;

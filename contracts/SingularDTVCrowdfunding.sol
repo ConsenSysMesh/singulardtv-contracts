@@ -2,7 +2,7 @@ import "AbstractSingularDTVToken.sol";
 import "AbstractSingularDTVFund.sol";
 
 
-/// @title Crowdfunding contract - Implements crowdfunding functionality.
+/// @title Token Creation contract - Implements token creation functionality.
 /// @author Stefan George - <stefan.george@consensys.net>
 contract SingularDTVCrowdfunding {
 
@@ -18,7 +18,7 @@ contract SingularDTVCrowdfunding {
     uint constant public CAP = 1000000000; // 1B tokens is the maximum amount of tokens
     uint constant public CROWDFUNDING_PERIOD = 4 weeks; // 1 month
     uint constant public TOKEN_LOCKING_PERIOD = 2 years; // 2 years
-    uint constant public TOKEN_TARGET = 534000000; // 34M Tokens more than the initial 500M, around 42,500 ETH
+    uint constant public TOKEN_TARGET = 534000000; // Goal threshold
 
     /*
      *  Enums
@@ -39,7 +39,7 @@ contract SingularDTVCrowdfunding {
     uint public baseValue = 1250 szabo; // 0.00125 ETH
     uint public valuePerShare = baseValue; // 0.00125 ETH
 
-    // investor address => investment in Wei
+    // participant address => value in Wei
     mapping (address => uint) public investments;
 
     // Initialize stage
@@ -64,7 +64,7 @@ contract SingularDTVCrowdfunding {
     }
 
     modifier minInvestment() {
-        // User has to invest at least the ether value of one share.
+        // User has to send at least the ether value of one token.
         if (msg.value < valuePerShare) {
             throw;
         }
@@ -138,7 +138,7 @@ contract SingularDTVCrowdfunding {
         return false;
     }
 
-    /// @dev Allows user to fund the campaign if campaign is still going and cap not reached. Returns share count.
+    /// @dev Allows user to create tokens if token creation is still going and cap not reached. Returns token count.
     function fund()
         external
         timedTransitions
@@ -146,17 +146,17 @@ contract SingularDTVCrowdfunding {
         minInvestment
         returns (uint)
     {
-        uint tokenCount = msg.value / valuePerShare; // Token count is rounded down. Investment should be multiples of valuePerShare.
+        uint tokenCount = msg.value / valuePerShare; // Token count is rounded down. Sent ETH should be multiples of valuePerShare.
         if (singularDTVToken.totalSupply() + tokenCount > CAP) {
-            // User wants to buy more shares than available. Set shares to possible maximum.
+            // User wants to create more tokens than available. Set tokens to possible maximum.
             tokenCount = CAP - singularDTVToken.totalSupply();
         }
-        uint investment = tokenCount * valuePerShare; // Ether invested by backer.
+        uint investment = tokenCount * valuePerShare; // Ether spent by user.
         // Send change back to user.
         if (msg.value > investment && !msg.sender.send(msg.value - investment)) {
             throw;
         }
-        // Update fund's and user's balance and total supply of shares.
+        // Update fund's and user's balance and total supply of tokens.
         fundBalance += investment;
         investments[msg.sender] += investment;
         if (!singularDTVToken.issueTokens(msg.sender, tokenCount)) {
@@ -169,7 +169,7 @@ contract SingularDTVCrowdfunding {
                 stage = Stages.CrowdfundingGoingAndGoalReached;
             }
         }
-        // not an else clause for the edge case that the CAP and TOKEN_TARGET are reached with one big funding
+        // not an else clause for the edge case that the CAP and TOKEN_TARGET are reached in one call
         if (stage == Stages.CrowdfundingGoingAndGoalReached) {
             if (singularDTVToken.totalSupply() == CAP) {
                 stage = Stages.CrowdfundingEndedAndGoalReached;
@@ -179,7 +179,7 @@ contract SingularDTVCrowdfunding {
         return tokenCount;
     }
 
-    /// @dev Allows user to withdraw his funding if crowdfunding ended and target was not reached. Returns success.
+    /// @dev Allows user to withdraw ETH if token creation period ended and target was not reached. Returns success.
     function withdrawFunding()
         external
         noEther
@@ -187,11 +187,11 @@ contract SingularDTVCrowdfunding {
         atStage(Stages.CrowdfundingEndedAndGoalNotReached)
         returns (bool)
     {
-        // Update fund's and user's balance and total supply of shares.
+        // Update fund's and user's balance and total supply of tokens.
         uint investment = investments[msg.sender];
         investments[msg.sender] = 0;
         fundBalance -= investment;
-        // Send funds back to user.
+        // Send ETH back to user.
         if (investment > 0  && !msg.sender.send(investment)) {
             throw;
         }
@@ -199,7 +199,7 @@ contract SingularDTVCrowdfunding {
         return true;
     }
 
-    /// @dev Withdraws funding for workshop. Returns success.
+    /// @dev Withdraws ETH to workshop address. Returns success.
     function withdrawForWorkshop()
         external
         noEther
@@ -228,7 +228,7 @@ contract SingularDTVCrowdfunding {
         return true;
     }
 
-    /// @dev Returns if 1 year passed since beginning of crowdfunding.
+    /// @dev Returns true if 2 years have passed since the beginning of token creation period.
     function twoYearsPassed()
         constant
         external
@@ -238,7 +238,7 @@ contract SingularDTVCrowdfunding {
         return now - startDate >= TOKEN_LOCKING_PERIOD;
     }
 
-    /// @dev Returns if campaign ended successfully.
+    /// @dev Returns if token creation ended successfully.
     function campaignEndedSuccessfully()
         constant
         external
@@ -251,7 +251,7 @@ contract SingularDTVCrowdfunding {
         return false;
     }
 
-    // updateStage allows calls to receive correct stage. It can be used for transactions but is not part of the regular crowdfunding routine.
+    // updateStage allows calls to receive correct stage. It can be used for transactions but is not part of the regular token creation routine.
     // It is not marked as constant because timedTransitions modifier is altering state and constant is not yet enforced by solc.
     /// @dev returns correct stage, even if a function with timedTransitions modifier has not yet been called successfully.
     function updateStage()
@@ -284,11 +284,11 @@ contract SingularDTVCrowdfunding {
     function SingularDTVCrowdfunding() noEther {
         // Set owner address
         owner = msg.sender;
-        // Set start-date of crowdfunding
+        // Set start-date of token creation
         startDate = now;
     }
 
-    /// @dev Fallback function always fails. Use fund function to fund the contract with Ether.
+    /// @dev Fallback function always fails. Use fund function to create tokens.
     function () {
         throw;
     }

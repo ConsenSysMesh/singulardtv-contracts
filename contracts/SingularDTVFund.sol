@@ -63,13 +63,13 @@ contract SingularDTVFund {
         return true;
     }
 
-    /// @dev Withdraws revenue share for user. Returns revenue share.
-    /// @param forAddress Shareholder's address.
+    /// @dev Withdraws revenue for user. Returns revenue.
+    /// @param forAddress user's address.
     function calcRevenue(address forAddress) internal returns (uint) {
         return singularDTVToken.balanceOf(forAddress) * (totalRevenue - revenueAtTimeOfWithdraw[forAddress]) / singularDTVToken.totalSupply();
     }
 
-    /// @dev Withdraws revenue share for user. Returns revenue share.
+    /// @dev Withdraws revenue for user. Returns revenue.
     function withdrawRevenue()
         external
         noEther
@@ -84,8 +84,8 @@ contract SingularDTVFund {
         return value;
     }
 
-    /// @dev Credits revenue share to owed balance.
-    /// @param forAddress Shareholder's address.
+    /// @dev Credits revenue to owed balance.
+    /// @param forAddress user's address.
     function softWithdrawRevenueFor(address forAddress)
         external
         noEther
@@ -113,7 +113,7 @@ contract SingularDTVFund {
         return false;
     }
 
-    /// @dev Contract constructor function sets guard and initial token balances.
+    /// @dev Contract constructor function sets guard address.
     function SingularDTVFund() noEther {
         // Set owner address
         owner = msg.sender;
