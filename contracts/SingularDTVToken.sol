@@ -74,8 +74,8 @@ contract SingularDTVToken is StandardToken {
         returns (bool)
     {
         // Both parties withdraw their revenue first
-        singularDTVFund.softWithdrawRevenueFor(msg.sender);
-        singularDTVFund.softWithdrawRevenueFor(to);
+        if (!singularDTVFund.softWithdrawRevenueFor(msg.sender) || !singularDTVFund.softWithdrawRevenueFor(to))
+            throw;
         return super.transfer(to, value);
     }
 
@@ -89,8 +89,8 @@ contract SingularDTVToken is StandardToken {
         returns (bool)
     {
         // Both parties withdraw their revenue first
-        singularDTVFund.softWithdrawRevenueFor(from);
-        singularDTVFund.softWithdrawRevenueFor(to);
+        if (!singularDTVFund.softWithdrawRevenueFor(from) || !singularDTVFund.softWithdrawRevenueFor(to))
+            throw;
         return super.transferFrom(from, to, value);
     }
 
