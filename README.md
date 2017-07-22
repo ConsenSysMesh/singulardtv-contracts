@@ -2,6 +2,7 @@
 
 Use `vagrant up` then
 `vagrant ssh default`
+`pip install -r requirements.txt`
 
 ### To run all tests:
 `cd /vagrant/`
