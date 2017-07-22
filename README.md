@@ -1,6 +1,7 @@
 # SingularDTV CODE
 
 Use `vagrant up` then
+`vagrant ssh default`
 
 ### To run all tests:
 `cd /vagrant/`
